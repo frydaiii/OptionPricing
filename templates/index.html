@@ -3,7 +3,7 @@
 <head>
     <title>Option Selectoádfr</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}"> <!-- Link to external CSS file -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}?id=1234"> <!-- Link to external CSS file -->
 </head>
 <body>
     <header>
@@ -23,7 +23,17 @@
         </form>
         
         <div id="result"></div>
+        <div id="options-container">
+            <ul id="options-list">
+                <!-- Options will be added here dynamically -->
+            </ul>
+        </div>
+        
+        <div id="pagination-controls">
+            <!-- Pagination controls will be added here dynamically -->
+        </div>
     </div>
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>

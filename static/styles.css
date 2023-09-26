@@ -16,12 +16,13 @@ body {
 
 header {
     padding: 20px; /* Add padding to the header for spacing */
+    text-align: center;
 }
 
 .container {
     display: flex;
     flex-direction: column; /* Stack elements vertically */
-    justify-content: center; /* Center vertically */
+    
     align-items: center; /* Center horizontally */
     height: 100%; /* Take up the full viewport height */
 }

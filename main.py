@@ -1,14 +1,16 @@
-from fastapi import FastAPI, Request, Depends
+from datetime import datetime
+from fastapi import FastAPI, Request, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from databases import Database
-from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIMAL, MetaData, func
+from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIMAL, MetaData, func, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from pydantic import BaseModel
 import uvicorn
 
 # Define database URL
-DATABASE_URL = "mysql://root:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -54,6 +56,7 @@ class OptionData(Base):
     strike_distance = Column(DECIMAL(10, 2))
     strike_distance_pct = Column(DECIMAL(10, 2))
 
+engine = create_engine(DATABASE_URL)
 # Function to create the database tables
 def create_tables():
     engine = create_engine(DATABASE_URL)
@@ -85,9 +88,36 @@ ticker_symbols = ["SPX"]
 def get_ticker_symbols():
     return ticker_symbols
 
-@app.get("/list-options")
-async def list_options(db: Session = Depends(get_db)):
-    options = db.query(OptionData).all()
+# request model
+class ListOptionsReq(BaseModel):
+    tickerSymbol: str
+    selectedDate: str
+    page: int
+    perPage: int
+# POST request to /list-options
+@app.post("/list-options")
+async def list_options(option_request: ListOptionsReq, db: Session = Depends(get_db)):
+    # print(ticker_symbol, date, perPage,page)
+    ticker_symbol = option_request.tickerSymbol
+    date = option_request.selectedDate
+    page = option_request.page
+    per_page = option_request.perPage
+
+    # Calculate the offset based on the page and perPage values
+    offset = (page - 1) * per_page
+    date_with_dashes = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
+    # Query the database for rows that match the ticker symbol and date with pagination
+    query = (
+        select(OptionData)
+        .where(OptionData.quote_date == date_with_dashes)
+        .where(OptionData.c_volume > 0)
+        # .where(or_(OptionData.c_symbol == ticker_symbol, OptionData.p_symbol == ticker_symbol))
+        .offset(offset)
+        .limit(per_page)
+    )
+
+    options = db.execute(query)
+    options = options.scalars().all()
     return options
 
 @app.on_event("startup")
@@ -106,3 +136,5 @@ if __name__ == "__main__":
         port    = 8036, 
         reload  = True
     )
+    # # Create the tables when the app starts
+    # create_tables()
