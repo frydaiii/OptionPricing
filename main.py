@@ -129,15 +129,13 @@ class CalPriceRequest(BaseModel):
     selectedDate: str
     strike: float
     expireDate: str
-    volatility: float
 @app.post("/calculate-price")
 async def list_options(req: CalPriceRequest):
     strike = req.strike
     selectedDate = datetime.strptime(req.selectedDate, "%m/%d/%Y")
     expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d")
-    volatility = req.volatility
     
-    return str(calculate_bs(strike, expireDate, selectedDate, volatility)) + " " + str(calculate_mc(strike, expireDate, selectedDate, volatility))
+    return str(calculate_bs(strike, expireDate, selectedDate)) + " " + str(calculate_mc(strike, expireDate, selectedDate))
 
 @app.on_event("startup")
 async def startup_db():
@@ -152,17 +150,20 @@ def get_r(end_date):
   tb_rate = yf.download("^IRX", start=end_date - timedelta(days=2), end=end_date)
   r = tb_rate.iloc[-1]["Close"]
   return r
-def calculate_bs(strike_price, expired_date, current_date, iv):
+def calculate_bs(strike_price, expired_date, current_date):
   # create train data is data 10 years before current_date
   end_date = current_date
-  start_date = end_date - timedelta(days=2)
+  start_date = end_date - timedelta(days=365*10)
   stock_data = yf.download("^SPX", start=start_date, end=end_date)
   df_close = stock_data['Close']
 #   df_log = np.log(df_close)
   train_data = df_close
   dte = (expired_date - train_data.index[-1]).days
 #   volatility = math.sqrt(np.mean(dSprice*dSprice/(Sprice*Sprice*1/365)))
-  volatility = iv
+  dSprice = np.diff(train_data.to_numpy())
+  Sprice = train_data.to_numpy()[:-1] 
+  volatility = math.sqrt(np.mean(dSprice*dSprice/(Sprice*Sprice*1/365)))
+#   volatility = iv
   maturity_date = ql.Date(expired_date.day, expired_date.month, expired_date.year)
   spot_price = df_close.iloc[-1]
   dividend_rate =  0
@@ -201,15 +202,19 @@ def calculate_bs(strike_price, expired_date, current_date, iv):
   bs_price = european_option.NPV()
   return bs_price
 
-def calculate_mc(strike_price, expired_date, current_date, iv):
+def calculate_mc(strike_price, expired_date, current_date):
     #precompute constants
     end_date = current_date
-    start_date = end_date - timedelta(days=2)
+    start_date = end_date - timedelta(days=365*10)
     stock_data = yf.download("^SPX", start=start_date, end=end_date)
     df_close = stock_data['Close']
+    train_data = df_close
     dte = (expired_date - df_close.index[-1]).days
     #   volatility = math.sqrt(np.mean(dSprice*dSprice/(Sprice*Sprice*1/365)))
-    vol = iv
+    dSprice = np.diff(train_data.to_numpy())
+    Sprice = train_data.to_numpy()[:-1] 
+    vol = math.sqrt(np.mean(dSprice*dSprice/(Sprice*Sprice*1/365)))
+    # vol = iv
     S = df_close.iloc[-1]
     K = strike_price
     M = 100000

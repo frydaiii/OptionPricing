@@ -93,7 +93,7 @@ $(document).ready(function() {
                 var calculateButton = $("<button>").text("Calculate Price");
                 calculateButton.on("click", function() {
                     // Call a function to send a request to /calculate-price
-                    calculatePrice(selectedDate, strike, expireDate, option.c_iv);
+                    calculatePrice(selectedDate, strike, expireDate);
                 });
                 listItem.append(calculateButton);
                 optionsList.append(listItem);
@@ -140,8 +140,7 @@ $(document).ready(function() {
         var requestData = {
             selectedDate: selectedDate,
             strike: strike,
-            expireDate: expireDate,
-            volatility: iv
+            expireDate: expireDate
         };
     
         $.ajax({
