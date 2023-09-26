@@ -90,6 +90,12 @@ $(document).ready(function() {
 
                 // Create a list item for the option and append it to the options list
                 var listItem = $("<li>").text(optionText);
+                var calculateButton = $("<button>").text("Calculate Price");
+                calculateButton.on("click", function() {
+                    // Call a function to send a request to /calculate-price
+                    calculatePrice(selectedDate, strike, expireDate, option.c_iv);
+                });
+                listItem.append(calculateButton);
                 optionsList.append(listItem);
             });
         } else {
@@ -128,6 +134,31 @@ $(document).ready(function() {
             });
             paginationControls.append(nextButton);
         }
+    }
+
+    function calculatePrice(selectedDate, strike, expireDate, iv) {
+        var requestData = {
+            selectedDate: selectedDate,
+            strike: strike,
+            expireDate: expireDate,
+            volatility: iv
+        };
+    
+        $.ajax({
+            url: '/calculate-price', // Replace with your API endpoint
+            method: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(response) {
+                // Handle the response from the calculation API
+                console.log('Calculation result:', response);
+                // You can display the result or take further actions here
+            },
+            error: function(error) {
+                console.error('Error calculating price:', error.statusText);
+            }
+        });
     }
 
     // Handle form submission
