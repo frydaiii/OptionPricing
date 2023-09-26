@@ -1,0 +1,38 @@
+/* CSS for centering the content */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family: Georgia, serif; /* Use your chosen font here */
+    background-color: #f0f0f0; /* Background color */
+    height: 100%; /* Ensure the body takes up the full viewport height */
+    margin: 0;
+}
+
+header {
+    padding: 20px; /* Add padding to the header for spacing */
+}
+
+.container {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    justify-content: center; /* Center vertically */
+    align-items: center; /* Center horizontally */
+    height: 100%; /* Take up the full viewport height */
+}
+
+/* Style the labels for the dropdowns */
+label {
+    margin-bottom: 10px; /* Add space between label and input */
+}
+
+select {
+    color: gray;
+}
+
+/* Additional styling for your content can be added here */

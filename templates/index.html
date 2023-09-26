@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Option Selectoádfr</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}"> <!-- Link to external CSS file -->
+</head>
+<body>
+    <header>
+        <h1>Select an Option</h1>
+    </header>
+    
+    <div class="container"> <!-- Add a container for content -->
+        <form id="optionForm">
+            <label for="optionSelect1">Choose an option:</label>
+            <select id="optionSelect1">
+                <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
+            </select>
+            
+            <!-- Add a second dropdown list with a label above -->
+            <input type="text" id="datepicker" placeholder="Select a date">            
+            <input type="submit" value="Submit">
+        </form>
+        
+        <div id="result"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="static/script.js"></script> <!-- Link to external JavaScript file -->
+</body>
+</html>
