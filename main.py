@@ -137,7 +137,7 @@ async def list_options(req: CalPriceRequest):
     expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d")
     volatility = req.volatility
     
-    return calculate_bs(strike, expireDate, selectedDate, volatility)
+    return str(calculate_bs(strike, expireDate, selectedDate, volatility)) + " " + str(calculate_mc(strike, expireDate, selectedDate, volatility))
 
 @app.on_event("startup")
 async def startup_db():
@@ -155,7 +155,7 @@ def get_r(end_date):
 def calculate_bs(strike_price, expired_date, current_date, iv):
   # create train data is data 10 years before current_date
   end_date = current_date
-  start_date = end_date - timedelta(days=365 * 10)
+  start_date = end_date - timedelta(days=2)
   stock_data = yf.download("^SPX", start=start_date, end=end_date)
   df_close = stock_data['Close']
 #   df_log = np.log(df_close)
@@ -201,25 +201,38 @@ def calculate_bs(strike_price, expired_date, current_date, iv):
   bs_price = european_option.NPV()
   return bs_price
 
-# def monte_carlo(S, K, vol, r, T, N, M):
-#     #precompute constants
-#     N = 1
-#     dt = T/N
-#     nudt = (r - 0.5*vol**2)*dt
-#     volsdt = vol*np.sqrt(dt)
-#     lnS = np.log(S)
-#     # Monte Carlo Method
-#     Z = np.random.normal(size=(N, M))
-#     delta_lnSt = nudt + volsdt*Z
-#     lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
-#     lnSt = np.concatenate( (np.full(shape=(1, M), fill_value=lnS), lnSt ) )
-#     # Compute Expectation and SE
-#     ST = np.exp(lnSt)
-#     CT = np.maximum(0, ST - K)
-#     C0 = np.exp(-r*T)*np.sum(CT[-1])/M
-#     sigma = np.sqrt( np.sum( (CT[-1] - C0)**2) / (M-1) )
-#     SE = sigma/np.sqrt(M)
-#     return C0, SE
+def calculate_mc(strike_price, expired_date, current_date, iv):
+    #precompute constants
+    end_date = current_date
+    start_date = end_date - timedelta(days=2)
+    stock_data = yf.download("^SPX", start=start_date, end=end_date)
+    df_close = stock_data['Close']
+    dte = (expired_date - df_close.index[-1]).days
+    #   volatility = math.sqrt(np.mean(dSprice*dSprice/(Sprice*Sprice*1/365)))
+    vol = iv
+    S = df_close.iloc[-1]
+    K = strike_price
+    M = 100000
+    N = 1
+    T = dte/365
+    r = get_r(end_date)
+
+    dt = T/N
+    nudt = (r - 0.5*vol**2)*dt
+    volsdt = vol*np.sqrt(dt)
+    lnS = np.log(S)
+    # Monte Carlo Method
+    Z = np.random.normal(size=(N, M))
+    delta_lnSt = nudt + volsdt*Z
+    lnSt = lnS + np.cumsum(delta_lnSt, axis=0)
+    lnSt = np.concatenate( (np.full(shape=(1, M), fill_value=lnS), lnSt ) )
+    # Compute Expectation and SE
+    ST = np.exp(lnSt)
+    CT = np.maximum(0, ST - K)
+    C0 = np.exp(-r*T)*np.sum(CT[-1])/M
+    sigma = np.sqrt( np.sum( (CT[-1] - C0)**2) / (M-1) )
+    SE = sigma/np.sqrt(M)
+    return C0
 
 if __name__ == "__main__":
     
