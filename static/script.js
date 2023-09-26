@@ -93,7 +93,7 @@ $(document).ready(function() {
                 var calculateButton = $("<button>").text("Calculate Price");
                 calculateButton.on("click", function() {
                     // Call a function to send a request to /calculate-price
-                    calculatePrice(selectedDate, strike, expireDate);
+                    calculatePrice(selectedDate, strike, expireDate, option.c_last);
                 });
                 listItem.append(calculateButton);
                 optionsList.append(listItem);
@@ -136,11 +136,12 @@ $(document).ready(function() {
         }
     }
 
-    function calculatePrice(selectedDate, strike, expireDate, iv) {
+    function calculatePrice(selectedDate, strike, expireDate, price) {
         var requestData = {
             selectedDate: selectedDate,
             strike: strike,
-            expireDate: expireDate
+            expireDate: expireDate,
+            price: price
         };
     
         $.ajax({
@@ -152,6 +153,12 @@ $(document).ready(function() {
             success: function(response) {
                 // Handle the response from the calculation API
                 console.log('Calculation result:', response);
+                // Create an image element and set its src attribute
+                var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
+                
+                // Append the image to the image container
+                $('#image-container').empty();
+                $('#image-container').append(imageElement);
                 // You can display the result or take further actions here
             },
             error: function(error) {

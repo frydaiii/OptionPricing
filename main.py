@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from databases import Database
+from matplotlib import pyplot as plt
 from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIMAL, MetaData, func, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -12,6 +13,7 @@ import QuantLib as ql
 import numpy as np
 import math
 import uvicorn
+import os
 
 # Define database URL
 DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
@@ -129,13 +131,37 @@ class CalPriceRequest(BaseModel):
     selectedDate: str
     strike: float
     expireDate: str
+    price: float
 @app.post("/calculate-price")
 async def list_options(req: CalPriceRequest):
     strike = req.strike
     selectedDate = datetime.strptime(req.selectedDate, "%m/%d/%Y")
     expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d")
     
-    return str(calculate_bs(strike, expireDate, selectedDate)) + " " + str(calculate_mc(strike, expireDate, selectedDate))
+    bs_price = calculate_bs(strike, expireDate, selectedDate)
+    mc_price = calculate_mc(strike, expireDate, selectedDate)
+    market_price = req.price
+
+    # print to image
+    bar_width = 0.2
+
+    # Create the bar chart
+    plt.clf()
+    plt.bar(0, mc_price, width=bar_width, label='MC Prices', align='center')
+    plt.bar(bar_width, bs_price, width=bar_width, label='BS Prices', align='center')
+    plt.bar(2*bar_width, market_price, width=bar_width, label='Market Prices', align='center')
+
+    # Customize the chart
+    plt.ylabel('Prices')
+    plt.title('Comparison of Prices')
+    plt.legend()
+
+    # Show the plot
+    img_path = "static/foo.png"
+    plt.savefig(img_path)
+
+    return 1
+
 
 @app.on_event("startup")
 async def startup_db():
@@ -147,8 +173,8 @@ async def shutdown_db():
 
 def get_r(end_date):
   # get risk free rate, is us treasury bonds in 3 months
-  tb_rate = yf.download("^IRX", start=end_date - timedelta(days=2), end=end_date)
-  r = tb_rate.iloc[-1]["Close"]
+  tb_rate = yf.download("^IRX", start=end_date - timedelta(days=3), end=end_date)
+  r = tb_rate.iloc[-1]["Close"] or tb_rate.iloc[0]
   return r
 def calculate_bs(strike_price, expired_date, current_date):
   # create train data is data 10 years before current_date

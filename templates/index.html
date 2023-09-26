@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Option Selectoádfr</title>
+    <title>Option Pricing</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}?id=1234"> <!-- Link to external CSS file -->
 </head>
 <body>
     <header>
-        <h1>Select an Option</h1>
+        <h1>Option Pricing</h1>
     </header>
     
     <div class="container"> <!-- Add a container for content -->
         <form id="optionForm">
-            <label for="optionSelect1">Choose an option:</label>
+            <label for="optionSelect1">Get option chain of specific day:</label>
             <select id="optionSelect1">
                 <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
             </select>
@@ -32,6 +32,9 @@
         <div id="pagination-controls">
             <!-- Pagination controls will be added here dynamically -->
         </div>
+        <div id="image-container">
+            <!-- The image will be added here dynamically -->
+        </div>        
     </div>
 
 
