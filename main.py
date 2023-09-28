@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIM
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
+from typing import Optional
 import yfinance as yf
 import QuantLib as ql
 import numpy as np
@@ -98,6 +99,8 @@ def get_ticker_symbols():
 class ListOptionsReq(BaseModel):
     tickerSymbol: str
     selectedDate: str
+    expireDate: str
+    strike: int
     page: int
     perPage: int
 # POST request to /list-options
@@ -106,20 +109,20 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
     # print(ticker_symbol, date, perPage,page)
     ticker_symbol = option_request.tickerSymbol
     date = option_request.selectedDate
+    expire_date = option_request.expireDate
+    strike = option_request.strike
     page = option_request.page
     per_page = option_request.perPage
+    # print(strike, expire_date)
 
     # Calculate the offset based on the page and perPage values
     offset = (page - 1) * per_page
-    date_with_dashes = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
+    date_with_dashes = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d")
     # Query the database for rows that match the ticker symbol and date with pagination
     data_query = (
         select(OptionData)
         .where(OptionData.quote_date == date_with_dashes)
         .where(OptionData.c_volume > 0)
-        # .where(or_(OptionData.c_symbol == ticker_symbol, OptionData.p_symbol == ticker_symbol))
-        .offset(offset)
-        .limit(per_page)
     )
 
     total_records_query = (
@@ -128,27 +131,44 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
         .where(OptionData.c_volume > 0)
     )
 
-    total_records = db.execute(total_records_query).scalar()
+    if expire_date != "":
+        expire_date = datetime.strptime(option_request.expireDate, "%Y-%m-%d").strftime("%Y-%m-%d")
+        data_query = data_query.where(OptionData.expire_date == expire_date)
+        total_records_query = total_records_query.where(OptionData.expire_date == expire_date)
+    
+    if strike != 0:
+        data_query = data_query.where(OptionData.strike == strike)
+        total_records_query = total_records_query.where(OptionData.strike == strike)
+
+    data_query = data_query.offset(offset).limit(per_page)
 
     options = db.execute(data_query)
     options = options.scalars().all()
+    total_records = db.execute(total_records_query).scalar()
     return {"options": options, "total_records": total_records}
 
 # calculate price request model
 class CalPriceRequest(BaseModel):
     selectedDate: str
-    strike: float
+    strike: int
     expireDate: str
-    price: float
 @app.post("/calculate-price")
-async def list_options(req: CalPriceRequest):
+async def list_options(req: CalPriceRequest, db: Session = Depends(get_db)):
     strike = req.strike
-    selectedDate = datetime.strptime(req.selectedDate, "%m/%d/%Y")
+    selectedDate = datetime.strptime(req.selectedDate, "%Y-%m-%d")
     expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d")
     
     bs_price = calculate_bs(strike, expireDate, selectedDate)
     mc_price = calculate_mc(strike, expireDate, selectedDate)
-    market_price = req.price
+    data_query = (
+        select(OptionData)
+        .where(OptionData.quote_date == selectedDate)
+        .where(OptionData.expire_date == expireDate)
+        .where(OptionData.strike == strike)
+        .where(OptionData.c_volume > 0)
+    )
+    options = db.execute(data_query).scalars().all()
+    market_price = 0 if len(options) == 0 else options[0].c_last
 
     # print to image
     bar_width = 0.2
@@ -255,9 +275,6 @@ def calculate_mc(strike_price, expired_date, current_date):
     N = 1000
     T = dte/365
     r = get_r(end_date)
-
-    print("Spot: " + str(S) + " strike: " + str(K) + " dte: " + str(dte) + 
-          " volatility: " + str(vol) + " r: " + str(r))
 
     dt = T/N
     nudt = (r - 0.5*vol**2)*dt

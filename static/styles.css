@@ -32,7 +32,7 @@ label {
     margin-bottom: 10px; /* Add space between label and input */
 }
 
-select {
+select:invalid {
     color: gray;
 }
 

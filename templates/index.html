@@ -12,13 +12,28 @@
     
     <div class="container"> <!-- Add a container for content -->
         <form id="optionForm">
-            <label for="optionSelect1">Get option chain of specific day:</label>
-            <select id="optionSelect1">
-                <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
-            </select>
+            <div>
+                <label for="optionSelect1">Choose ticker:</label>
+                <select id="optionSelect1" required>
+                    <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
+                </select>
+            </div>
             
-            <!-- Add a second dropdown list with a label above -->
-            <input type="text" id="datepicker" placeholder="Select a date">            
+            <div>
+                <label for="datepicker">Select a trading Date:</label>
+                <input type="text" id="tradingDate" name="tradingDate" class="datepicker" placeholder="Select a date" required> 
+            </div>
+            
+            <div>
+                <label for="expirationDate">Select an Expiration Date:</label>
+                <input type="text" id="expirationDate" name="expirationDate" class="datepicker" placeholder="Select Expiration Date">
+            </div>
+        
+            <div>
+                <label for="strikePrice">Enter Strike Price:</label>
+                <input type="number" id="strikePrice" name="strikePrice" placeholder="Enter Strike Price">
+            </div>
+        
             <input type="submit" value="Submit">
         </form>
         

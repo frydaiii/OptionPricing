@@ -1,7 +1,9 @@
 $(document).ready(function() {
     var optionsPerPage = 10;
-    var tickerSymbol
-    var selectedDate
+    var tickerSymbol;
+    var selectedDate;
+    var expireDate;
+    var strike;
     // Fetch data from the API (assuming it returns an array)
     $.ajax({
         url: '/ticker-symbols', // Replace with your API endpoint
@@ -32,12 +34,31 @@ $(document).ready(function() {
     }
 
     // Initialize the datepicker
-    // _todo update min/max
-    year = 2019;
-    $("#datepicker").datepicker({
+    year = 2020;
+    $("#tradingDate").datepicker({
         minDate: new Date(year, 0, 1),
-        maxDate: new Date(year+1, 12, 30)
+        maxDate: new Date(year, 11, 31),
+        dateFormat: 'yy-mm-dd',
+        onSelect: function(date){
+
+            var selectedDate = new Date(date);
+            var msecsInADay = 86400000;
+            var endDate = new Date(selectedDate.getTime() + msecsInADay);
+    
+           //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
+            $("#expirationDate").datepicker({
+                minDate: endDate,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+            // $("#endDatePicker").datepicker( "option", "maxDate", '+2y' );
+    
+        }
     });
+
+    // $("#expirationDate").datepicker({
+    //     changeYear: true
+    // });
 
 
     // Function to fetch options from the API and display them
@@ -51,16 +72,18 @@ $(document).ready(function() {
             data: JSON.stringify({
                 tickerSymbol: tickerSymbol,
                 selectedDate: selectedDate,
+                expireDate: expireDate,
+                strike: Number(strike),
                 page: pageNumber,
                 perPage: optionsPerPage
             }),
             success: function(response) {
-                // console.log(response)
+                console.log(response)
                 // Update the options list with the received data
                 updateOptionsList(response.options);
 
                 // Update pagination controls
-                updatePagination(response.total_records / optionsPerPage, pageNumber);
+                updatePagination(Math.floor(response.total_records / optionsPerPage) + 1, pageNumber);
             },
             error: function(error) {
                 console.error('Error fetching data from the API: ' + error.statusText);
@@ -93,7 +116,7 @@ $(document).ready(function() {
                 var calculateButton = $("<button>").text("Calculate Price");
                 calculateButton.on("click", function() {
                     // Call a function to send a request to /calculate-price
-                    calculatePrice(selectedDate, strike, expireDate, option.c_last);
+                    calculatePrice(selectedDate, strike, expireDate);
                 });
                 listItem.append(calculateButton);
                 optionsList.append(listItem);
@@ -108,17 +131,31 @@ $(document).ready(function() {
         var paginationControls = $("#pagination-controls");
         paginationControls.empty(); // Clear existing controls
 
+        // Calculate the number of buttons to display (e.g., 10 at a time)
+        var buttonsToShow = 10;
+        var startPage = Math.max(currentPage - Math.floor(buttonsToShow / 2), 1);
+        var endPage = Math.min(startPage + buttonsToShow - 1, totalPages);
+
+        // Add "First Page" button
+        if (currentPage > 1) {
+            var firstPageButton = $("<button>").text("First Page");
+            firstPageButton.on("click", function() {
+                updatePagination(totalPages, 1);
+            });
+            paginationControls.append(firstPageButton);
+        }
+
         // Create "Previous" button if not on the first page
         if (currentPage > 1) {
             var prevButton = $("<button>").text("Previous");
             prevButton.on("click", function() {
-                fetchAndDisplayOptions(currentPage - 1, optionsPerPage);
+                fetchAndDisplayOptions(currentPage - 1, optionsPerPage, tickerSymbol, selectedDate);
             });
             paginationControls.append(prevButton);
         }
 
         // Create page number buttons
-        for (var i = 1; i <= totalPages; i++) {
+        for (var i = startPage; i <= endPage; i++) {
             var pageButton = $("<button>").text(i);
             pageButton.on("click", function() {
                 fetchAndDisplayOptions(parseInt($(this).text()), optionsPerPage, tickerSymbol, selectedDate);
@@ -134,14 +171,22 @@ $(document).ready(function() {
             });
             paginationControls.append(nextButton);
         }
+
+        // Add "Last Page" button
+        if (currentPage < totalPages) {
+            var lastPageButton = $("<button>").text("Last Page");
+            lastPageButton.on("click", function() {
+                updatePagination(totalPages, totalPages);
+            });
+            paginationControls.append(lastPageButton);
+        }
     }
 
-    function calculatePrice(selectedDate, strike, expireDate, price) {
+    function calculatePrice(selectedDate, strike, expireDate) {
         var requestData = {
             selectedDate: selectedDate,
             strike: strike,
-            expireDate: expireDate,
-            price: price
+            expireDate: expireDate
         };
     
         $.ajax({
@@ -170,12 +215,22 @@ $(document).ready(function() {
     // Handle form submission
     $("#optionForm").submit(function(event) {
         event.preventDefault(); // Prevent the default form submission
+        var optionsList = $("#options-list");
+        optionsList.empty(); // Clear existing options
+        var paginationControls = $("#pagination-controls");
+        paginationControls.empty(); // Clear existing controls
 
         // Get selected ticker symbol and date from the form
         tickerSymbol = $("#optionSelect1").val();
-        selectedDate = $("#datepicker").val();
+        selectedDate = $("#tradingDate").val();
+        expireDate = $("#expirationDate").val();
+        strike = Number($("#strikePrice").val());
 
-        // Make the API request after form submission
-        fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
+        if (strike && expireDate) {
+            calculatePrice(selectedDate, strike, expireDate)
+        } else {
+            // Make the API request after form submission
+            fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
+        }
     });
 });
