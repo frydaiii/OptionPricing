@@ -113,7 +113,7 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
     offset = (page - 1) * per_page
     date_with_dashes = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
     # Query the database for rows that match the ticker symbol and date with pagination
-    query = (
+    data_query = (
         select(OptionData)
         .where(OptionData.quote_date == date_with_dashes)
         .where(OptionData.c_volume > 0)
@@ -122,9 +122,17 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
         .limit(per_page)
     )
 
-    options = db.execute(query)
+    total_records_query = (
+        select(func.count(OptionData.id))
+        .where(OptionData.quote_date == date_with_dashes)
+        .where(OptionData.c_volume > 0)
+    )
+
+    total_records = db.execute(total_records_query).scalar()
+
+    options = db.execute(data_query)
     options = options.scalars().all()
-    return options
+    return {"options": options, "total_records": total_records}
 
 # calculate price request model
 class CalPriceRequest(BaseModel):
@@ -175,7 +183,7 @@ def get_r(end_date):
   # get risk free rate, is us treasury bonds in 3 months
   tb_rate = yf.download("^IRX", start=end_date - timedelta(days=3), end=end_date)
   r = tb_rate.iloc[-1]["Close"] or tb_rate.iloc[0]
-  return r
+  return r/100
 def calculate_bs(strike_price, expired_date, current_date):
   # create train data is data 10 years before current_date
   end_date = current_date
@@ -244,9 +252,12 @@ def calculate_mc(strike_price, expired_date, current_date):
     S = df_close.iloc[-1]
     K = strike_price
     M = 100000
-    N = 1
+    N = 1000
     T = dte/365
     r = get_r(end_date)
+
+    print("Spot: " + str(S) + " strike: " + str(K) + " dte: " + str(dte) + 
+          " volatility: " + str(vol) + " r: " + str(r))
 
     dt = T/N
     nudt = (r - 0.5*vol**2)*dt

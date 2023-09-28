@@ -55,12 +55,12 @@ $(document).ready(function() {
                 perPage: optionsPerPage
             }),
             success: function(response) {
-                console.log(response)
+                // console.log(response)
                 // Update the options list with the received data
-                updateOptionsList(response);
+                updateOptionsList(response.options);
 
                 // Update pagination controls
-                updatePagination(optionsPerPage, pageNumber);
+                updatePagination(response.total_records / optionsPerPage, pageNumber);
             },
             error: function(error) {
                 console.error('Error fetching data from the API: ' + error.statusText);
