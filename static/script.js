@@ -10,7 +10,8 @@ $(document).ready(function() {
         method: 'GET',
         dataType: 'json',
         success: function(data) {
-            populateDropdown(data);
+            populateDropdown(data, "optionSelect1");
+            populateDropdown(data, "optionSelect2");
         },
         error: function(error) {
             console.error('Error fetching data from the API: ' + error.statusText);
@@ -18,8 +19,8 @@ $(document).ready(function() {
     });
 
     // Function to populate the first dropdown
-    function populateDropdown(options) {
-        var dropdown = document.getElementById("optionSelect1");
+    function populateDropdown(options, option_select_id) {
+        var dropdown = document.getElementById(option_select_id);
 
         // // Clear any existing options
         // dropdown.innerHTML = "";
@@ -47,6 +48,27 @@ $(document).ready(function() {
     
            //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
             $("#expirationDate").datepicker({
+                minDate: endDate,
+                changeYear: true,
+                dateFormat: 'yy-mm-dd'
+            });
+            // $("#endDatePicker").datepicker( "option", "maxDate", '+2y' );
+    
+        }
+    });
+
+    $("#tradingDate2").datepicker({
+        minDate: new Date(year, 0, 1),
+        maxDate: new Date(year, 11, 31),
+        dateFormat: 'yy-mm-dd',
+        onSelect: function(date){
+
+            var selectedDate = new Date(date);
+            var msecsInADay = 86400000;
+            var endDate = new Date(selectedDate.getTime() + msecsInADay);
+    
+           //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
+            $("#expirationDate2").datepicker({
                 minDate: endDate,
                 changeYear: true,
                 dateFormat: 'yy-mm-dd'
@@ -190,7 +212,7 @@ $(document).ready(function() {
         };
     
         $.ajax({
-            url: '/calculate-price', // Replace with your API endpoint
+            url: '/calculate-price',
             method: 'POST',
             dataType: 'json',
             contentType: 'application/json',
@@ -212,8 +234,38 @@ $(document).ready(function() {
         });
     }
 
+    function calculatePrice2(selectedDate, strike, expireDate) {
+        var requestData = {
+            selectedDate: selectedDate,
+            strike: strike,
+            expireDate: expireDate
+        };
+    
+        $.ajax({
+            url: '/calculate-price-2',
+            method: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(response) {
+                // Handle the response from the calculation API
+                console.log('Calculation result:', response);
+                // Create an image element and set its src attribute
+                var imageElement = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
+                
+                // Append the image to the image container
+                $('#image-container-2').empty();
+                $('#image-container-2').append(imageElement);
+                // You can display the result or take further actions here
+            },
+            error: function(error) {
+                console.error('Error calculating price:', error.statusText);
+            }
+        });
+    }
+
     // Handle form submission
-    $("#optionForm").submit(function(event) {
+    $("#form1").submit(function(event) {
         event.preventDefault(); // Prevent the default form submission
         var optionsList = $("#options-list");
         optionsList.empty(); // Clear existing options
@@ -233,6 +285,15 @@ $(document).ready(function() {
             fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
         }
     });
+    $("#form2").submit(function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Get selected ticker symbol and date from the form
+        tickerSymbol = $("#optionSelect2").val();
+        selectedDate = $("#tradingDate2").val();
+        // Make the API request after form submission
+        calculatePrice2(selectedDate, strike, expireDate);
+    });
 
     $(".tab-link").on("click", function() {
         var tabId = $(this).data("tab");
@@ -240,5 +301,25 @@ $(document).ready(function() {
         $(".tab-content").removeClass("current");
         $(this).addClass("current");
         $("#" + tabId).addClass("current");
+    });
+
+    // Initially, hide both input sections
+    $("#strikePriceSection").hide();
+    $("#expirationDateSection").hide();
+
+    // Listen for changes to the radio buttons
+    $("input[name='optionChoice']").change(function() {
+        var selectedOption = $(this).val();
+
+        // Hide both sections
+        $("#strikePriceSection").hide();
+        $("#expirationDateSection").hide();
+
+        // Show the selected section
+        if (selectedOption === "strikePrice") {
+            $("#strikePriceSection").show();
+        } else if (selectedOption === "expirationDate") {
+            $("#expirationDateSection").show();
+        }
     });
 });

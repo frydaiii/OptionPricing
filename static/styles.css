@@ -68,7 +68,7 @@ select:invalid {
 }
 
 /* Style for the form container */
-#optionForm {
+.optionForm {
     display: flex;
     flex-direction: column;
     align-items: stretch; /* Stretch items to fill the width */
