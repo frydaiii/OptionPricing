@@ -233,4 +233,12 @@ $(document).ready(function() {
             fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
         }
     });
+
+    $(".tab-link").on("click", function() {
+        var tabId = $(this).data("tab");
+        $(".tab-link").removeClass("current");
+        $(".tab-content").removeClass("current");
+        $(this).addClass("current");
+        $("#" + tabId).addClass("current");
+    });
 });
