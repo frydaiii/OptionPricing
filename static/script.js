@@ -291,6 +291,9 @@ $(document).ready(function() {
         // Get selected ticker symbol and date from the form
         tickerSymbol = $("#optionSelect2").val();
         selectedDate = $("#tradingDate2").val();
+        expireDate = $("#expirationDate2").val();
+        strike = Number($("#strikePrice2").val());
+
         // Make the API request after form submission
         calculatePrice2(selectedDate, strike, expireDate);
     });
@@ -318,8 +321,14 @@ $(document).ready(function() {
         // Show the selected section
         if (selectedOption === "strikePrice") {
             $("#strikePriceSection").show();
+            document.getElementById("strikePrice2").required = true;
+            document.getElementById("expirationDate2").required = false;
+            document.getElementById("expirationDate2").value = "";
         } else if (selectedOption === "expirationDate") {
             $("#expirationDateSection").show();
+            document.getElementById("strikePrice2").required = false;
+            document.getElementById("expirationDate2").required = true;
+            document.getElementById("strikePrice2").value = "";
         }
     });
 });
