@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from typing import Optional
 from back.models import OptionData
-from back.calculators import calculate_bs, calculate_mc, get_r, get_spot, get_volatility
+from back.calculators import calculate_bs, calculate_mc, calculate_bs_2, calculate_mc_2, get_r, get_spot, get_volatility
 import yfinance as yf
 import QuantLib as ql
 import numpy as np
@@ -180,8 +180,8 @@ async def calculate_prices(req: CalPriceRequest, db: Session = Depends(get_db)):
         strike_prices = [int(opt.strike) for opt in data]
         expireDate = datetime.strptime(expireDate, "%Y-%m-%d").date()
         for strike_price in strike_prices:
-            prices_bs.append(calculate_bs(spot, strike_price, expireDate, selectedDate, r, vol))
-            prices_mc.append(calculate_mc(spot, strike_price, expireDate, selectedDate, r, vol))
+            prices_bs.append(calculate_bs_2(spot, strike_price, expireDate, selectedDate, r, vol))
+            prices_mc.append(calculate_mc_2(spot, strike_price, expireDate, selectedDate, r, vol))
 
     else:
         query = (
@@ -196,8 +196,8 @@ async def calculate_prices(req: CalPriceRequest, db: Session = Depends(get_db)):
         market_prices = [opt.c_last for opt in data]
         expire_dates = [opt.expire_date for opt in data]
         for expire_date in expire_dates:
-            prices_bs.append(calculate_bs(spot, strike, expire_date, selectedDate, r, vol))
-            prices_mc.append(calculate_mc(spot, strike, expire_date, selectedDate, r, vol))
+            prices_bs.append(calculate_bs_2(spot, strike, expire_date, selectedDate, r, vol))
+            prices_mc.append(calculate_mc_2(spot, strike, expire_date, selectedDate, r, vol))
     
     # plot and save to image
     plt.ylabel('Prices')
