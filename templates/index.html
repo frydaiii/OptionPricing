@@ -3,7 +3,7 @@
 <head>
     <title>Option Pricing</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}?id=1234"> <!-- Link to external CSS file -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/styles.css') }}?id=123"> <!-- Link to external CSS file -->
 </head>
 <body>
     <header>
@@ -33,6 +33,7 @@
                         <input type="radio" name="optionChoice" value="riskAndVolatility"> Enter Risk-Free Rate and Volatility
                     </label>
                 </div>
+                <br>
 
                 <div id="symbolTickerSection" class="form-group">
                     <label for="symbolTicker">Enter Symbol Ticker:</label>
@@ -46,39 +47,34 @@
                 
                 <div class="form-group">
                     <label for="expirationDate">Select an Expiration Date:</label>
-                    <input type="text" id="expirationDate" name="expirationDate" class="datepicker" placeholder="Select Expiration Date">
+                    <input type="text" id="expirationDate" name="expirationDate" class="datepicker" placeholder="Select Expiration Date" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="strikePrice">Enter Strike Price:</label>
-                    <input type="number" id="strikePrice" name="strikePrice" placeholder="Enter Strike Price">
+                <div class="rvspotSection form-group">
+                    <label for="spotPrice">Enter Spot Price:</label>
+                    <input type="number" id="spotPrice" name="spotPrice" placeholder="Enter Spot Price" required>
                 </div>
 
-                <div class="riskAndVolatilitySection form-group">
-                    <label for="riskFreeRate">Enter Risk-Free Rate:</label>
-                    <input type="number" id="riskFreeRate" name="riskFreeRate" placeholder="Enter Risk-Free Rate" required>
+                <div class="form-group">
+                    <label for="strikePrice">Enter Strike Price:</label>
+                    <input type="number" id="strikePrice" name="strikePrice" placeholder="Enter Strike Price" required>
                 </div>
-                <div class="riskAndVolatilitySection form-group">
+
+                <div class="rvspotSection form-group">
+                    <label for="riskFreeRate">Enter Risk-Free Rate:</label>
+                    <input type="number" step="0.01" id="riskFreeRate" name="riskFreeRate" placeholder="Enter Risk-Free Rate" required>
+                </div>
+                <div class="rvspotSection form-group">
                     <label for="volatility">Enter Volatility:</label>
-                    <input type="number" id="volatility" name="volatility" placeholder="Enter Volatility" required>
+                    <input type="number" step="0.01" id="volatility" name="volatility" placeholder="Enter Volatility" required>
                 </div>
                 
                 <input type="submit" value="Submit">
             </form>
             
-            <div id="result"></div>
-            <div id="options-container">
-                <ul id="options-list">
-                    <!-- Options will be added here dynamically -->
-                </ul>
-            </div>
-            
-            <div id="pagination-controls">
-                <!-- Pagination controls will be added here dynamically -->
-            </div>
-            <div id="image-container">
-                <!-- The image will be added here dynamically -->
-            </div>        
+            <div id="result">
+                <ul id="result-prices"></ul>
+            </div>     
         </div>
         
         <div id="tab2" class="tab-content">

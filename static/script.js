@@ -10,7 +10,7 @@ $(document).ready(function() {
         method: 'GET',
         dataType: 'json',
         success: function(data) {
-            populateDropdown(data, "optionSelect1");
+            // populateDropdown(data, "optionSelect1");
             populateDropdown(data, "optionSelect2");
         },
         error: function(error) {
@@ -83,132 +83,136 @@ $(document).ready(function() {
     // });
 
 
-    // Function to fetch options from the API and display them
-    function fetchAndDisplayOptions(pageNumber, optionsPerPage, tickerSymbol, selectedDate) {
-        // Make a request to the /list-options API with page and perPage parameters
-        $.ajax({
-            url: '/list-options', // Replace with your API endpoint
-            method: 'POST',
-            dataType: 'json',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                tickerSymbol: tickerSymbol,
-                selectedDate: selectedDate,
-                expireDate: expireDate,
-                strike: Number(strike),
-                page: pageNumber,
-                perPage: optionsPerPage
-            }),
-            success: function(response) {
-                console.log(response)
-                // Update the options list with the received data
-                updateOptionsList(response.options);
+    // // Function to fetch options from the API and display them
+    // function fetchAndDisplayOptions(pageNumber, optionsPerPage, tickerSymbol, selectedDate) {
+    //     // Make a request to the /list-options API with page and perPage parameters
+    //     $.ajax({
+    //         url: '/list-options', // Replace with your API endpoint
+    //         method: 'POST',
+    //         dataType: 'json',
+    //         contentType: 'application/json',
+    //         data: JSON.stringify({
+    //             tickerSymbol: tickerSymbol,
+    //             selectedDate: selectedDate,
+    //             expireDate: expireDate,
+    //             strike: Number(strike),
+    //             page: pageNumber,
+    //             perPage: optionsPerPage
+    //         }),
+    //         success: function(response) {
+    //             console.log(response)
+    //             // Update the options list with the received data
+    //             updateOptionsList(response.options);
 
-                // Update pagination controls
-                updatePagination(Math.floor(response.total_records / optionsPerPage) + 1, pageNumber);
-            },
-            error: function(error) {
-                console.error('Error fetching data from the API: ' + error.statusText);
-            }
-        });
-    }
+    //             // Update pagination controls
+    //             updatePagination(Math.floor(response.total_records / optionsPerPage) + 1, pageNumber);
+    //         },
+    //         error: function(error) {
+    //             console.error('Error fetching data from the API: ' + error.statusText);
+    //         }
+    //     });
+    // }
 
-    // Function to update the options list with the received data
-    function updateOptionsList(options) {
-        var optionsList = $("#options-list");
-        optionsList.empty(); // Clear existing options
+    // // Function to update the options list with the received data
+    // function updateOptionsList(options) {
+    //     var optionsList = $("#options-list");
+    //     optionsList.empty(); // Clear existing options
 
-        // Populate the list with the received options
-        // Check if options is defined and is an array
-        if (Array.isArray(options)) {
-            // Populate the list with the received options
-            options.forEach(function(option) {
-                // Extract relevant information from the option object
-                var strike = option.strike;
-                var expireDate = option.expire_date;
-                var cAsk = option.c_ask;
-                var cBid = option.c_bid;
-                var cLast = option.c_last;
+    //     // Populate the list with the received options
+    //     // Check if options is defined and is an array
+    //     if (Array.isArray(options)) {
+    //         // Populate the list with the received options
+    //         options.forEach(function(option) {
+    //             // Extract relevant information from the option object
+    //             var strike = option.strike;
+    //             var expireDate = option.expire_date;
+    //             var cAsk = option.c_ask;
+    //             var cBid = option.c_bid;
+    //             var cLast = option.c_last;
 
-                // Create a formatted string for the option
-                var optionText = "Strike: " + strike + ", Expire Date: " + expireDate + ", Call Ask: " + cAsk + ", Call Bid: " + cBid + ", Call Last: " + cLast;
+    //             // Create a formatted string for the option
+    //             var optionText = "Strike: " + strike + ", Expire Date: " + expireDate + ", Call Ask: " + cAsk + ", Call Bid: " + cBid + ", Call Last: " + cLast;
 
-                // Create a list item for the option and append it to the options list
-                var listItem = $("<li>").text(optionText);
-                var calculateButton = $("<button>").text("Calculate Price");
-                calculateButton.on("click", function() {
-                    // Call a function to send a request to /calculate-price
-                    calculatePrice(selectedDate, strike, expireDate);
-                });
-                listItem.append(calculateButton);
-                optionsList.append(listItem);
-            });
-        } else {
-            console.error('Invalid options data:', options);
-        }
-    }
+    //             // Create a list item for the option and append it to the options list
+    //             var listItem = $("<li>").text(optionText);
+    //             var calculateButton = $("<button>").text("Calculate Price");
+    //             calculateButton.on("click", function() {
+    //                 // Call a function to send a request to /calculate-price
+    //                 calculatePrice(selectedDate, strike, expireDate);
+    //             });
+    //             listItem.append(calculateButton);
+    //             optionsList.append(listItem);
+    //         });
+    //     } else {
+    //         console.error('Invalid options data:', options);
+    //     }
+    // }
 
-    // Function to update the pagination controls
-    function updatePagination(totalPages, currentPage) {
-        var paginationControls = $("#pagination-controls");
-        paginationControls.empty(); // Clear existing controls
+    // // Function to update the pagination controls
+    // function updatePagination(totalPages, currentPage) {
+    //     var paginationControls = $("#pagination-controls");
+    //     paginationControls.empty(); // Clear existing controls
 
-        // Calculate the number of buttons to display (e.g., 10 at a time)
-        var buttonsToShow = 10;
-        var startPage = Math.max(currentPage - Math.floor(buttonsToShow / 2), 1);
-        var endPage = Math.min(startPage + buttonsToShow - 1, totalPages);
+    //     // Calculate the number of buttons to display (e.g., 10 at a time)
+    //     var buttonsToShow = 10;
+    //     var startPage = Math.max(currentPage - Math.floor(buttonsToShow / 2), 1);
+    //     var endPage = Math.min(startPage + buttonsToShow - 1, totalPages);
 
-        // Add "First Page" button
-        if (currentPage > 1) {
-            var firstPageButton = $("<button>").text("First Page");
-            firstPageButton.on("click", function() {
-                updatePagination(totalPages, 1);
-            });
-            paginationControls.append(firstPageButton);
-        }
+    //     // Add "First Page" button
+    //     if (currentPage > 1) {
+    //         var firstPageButton = $("<button>").text("First Page");
+    //         firstPageButton.on("click", function() {
+    //             updatePagination(totalPages, 1);
+    //         });
+    //         paginationControls.append(firstPageButton);
+    //     }
 
-        // Create "Previous" button if not on the first page
-        if (currentPage > 1) {
-            var prevButton = $("<button>").text("Previous");
-            prevButton.on("click", function() {
-                fetchAndDisplayOptions(currentPage - 1, optionsPerPage, tickerSymbol, selectedDate);
-            });
-            paginationControls.append(prevButton);
-        }
+    //     // Create "Previous" button if not on the first page
+    //     if (currentPage > 1) {
+    //         var prevButton = $("<button>").text("Previous");
+    //         prevButton.on("click", function() {
+    //             fetchAndDisplayOptions(currentPage - 1, optionsPerPage, tickerSymbol, selectedDate);
+    //         });
+    //         paginationControls.append(prevButton);
+    //     }
 
-        // Create page number buttons
-        for (var i = startPage; i <= endPage; i++) {
-            var pageButton = $("<button>").text(i);
-            pageButton.on("click", function() {
-                fetchAndDisplayOptions(parseInt($(this).text()), optionsPerPage, tickerSymbol, selectedDate);
-            });
-            paginationControls.append(pageButton);
-        }
+    //     // Create page number buttons
+    //     for (var i = startPage; i <= endPage; i++) {
+    //         var pageButton = $("<button>").text(i);
+    //         pageButton.on("click", function() {
+    //             fetchAndDisplayOptions(parseInt($(this).text()), optionsPerPage, tickerSymbol, selectedDate);
+    //         });
+    //         paginationControls.append(pageButton);
+    //     }
 
-        // Create "Next" button if not on the last page
-        if (currentPage < totalPages) {
-            var nextButton = $("<button>").text("Next");
-            nextButton.on("click", function() {
-                fetchAndDisplayOptions(currentPage + 1, optionsPerPage, tickerSymbol, selectedDate);
-            });
-            paginationControls.append(nextButton);
-        }
+    //     // Create "Next" button if not on the last page
+    //     if (currentPage < totalPages) {
+    //         var nextButton = $("<button>").text("Next");
+    //         nextButton.on("click", function() {
+    //             fetchAndDisplayOptions(currentPage + 1, optionsPerPage, tickerSymbol, selectedDate);
+    //         });
+    //         paginationControls.append(nextButton);
+    //     }
 
-        // Add "Last Page" button
-        if (currentPage < totalPages) {
-            var lastPageButton = $("<button>").text("Last Page");
-            lastPageButton.on("click", function() {
-                updatePagination(totalPages, totalPages);
-            });
-            paginationControls.append(lastPageButton);
-        }
-    }
+    //     // Add "Last Page" button
+    //     if (currentPage < totalPages) {
+    //         var lastPageButton = $("<button>").text("Last Page");
+    //         lastPageButton.on("click", function() {
+    //             updatePagination(totalPages, totalPages);
+    //         });
+    //         paginationControls.append(lastPageButton);
+    //     }
+    // }
 
-    function calculatePrice(selectedDate, strike, expireDate) {
+    function calculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v) {
         var requestData = {
+            ticker: tickerSymbol,
             selectedDate: selectedDate,
+            spot: spot,
             strike: strike,
-            expireDate: expireDate
+            expireDate: expireDate,
+            r: r,
+            v: v
         };
     
         $.ajax({
@@ -219,14 +223,27 @@ $(document).ready(function() {
             data: JSON.stringify(requestData),
             success: function(response) {
                 // Handle the response from the calculation API
-                console.log('Calculation result:', response);
+                // console.log('Calculation result:', response);
                 // Create an image element and set its src attribute
-                var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
+                // var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
                 
-                // Append the image to the image container
-                $('#image-container').empty();
-                $('#image-container').append(imageElement);
+                // // Append the image to the image container
+                // $('#image-container').empty();
+                // $('#image-container').append(imageElement);
                 // You can display the result or take further actions here
+                        // Display the response in a bullet list
+                var resultList = $("#result-prices");
+                resultList.empty(); // Clear previous results
+
+                $.each(response, function(key, value) {
+                    var listItem = $("<li>").text(key + ": " + value);
+                    resultList.append(listItem);
+                });
+
+                // Scroll to the results
+                $('html, body').animate({
+                    scrollTop: $("#results").offset().top
+                }, 500);
             },
             error: function(error) {
                 console.error('Error calculating price:', error.statusText);
@@ -273,17 +290,21 @@ $(document).ready(function() {
         paginationControls.empty(); // Clear existing controls
 
         // Get selected ticker symbol and date from the form
-        tickerSymbol = $("#optionSelect1").val();
+        tickerSymbol = $("#symbolTicker").val();
         selectedDate = $("#tradingDate").val();
         expireDate = $("#expirationDate").val();
+        spot = Number($("#spotPrice").val());
         strike = Number($("#strikePrice").val());
+        r = parseFloat($("#riskFreeRate").val());
+        v = parseFloat($("#volatility").val());
 
-        if (strike && expireDate) {
-            calculatePrice(selectedDate, strike, expireDate)
-        } else {
-            // Make the API request after form submission
-            fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
-        }
+        calculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v)
+        // if (strike && expireDate) {
+        //     calculatePrice(selectedDate, strike, expireDate)
+        // } else {
+        //     // Make the API request after form submission
+        //     fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
+        // }
     });
     $("#form2").submit(function(event) {
         event.preventDefault(); // Prevent the default form submission
@@ -333,7 +354,7 @@ $(document).ready(function() {
     });
 
     $("#symbolTickerSection").hide();
-    $(".riskAndVolatilitySection").hide();
+    $(".rvspotSection").hide();
 
     // Listen for changes to the radio buttons
     $("input[name='optionChoice']").change(function() {
@@ -342,13 +363,19 @@ $(document).ready(function() {
 
         // Hide both sections
         $("#symbolTickerSection").hide();
-        $(".riskAndVolatilitySection").hide();
+        $(".rvspotSection").hide();
 
         // Show the selected section
         if (selectedOption === "symbolTicker") {
             $("#symbolTickerSection").show();
-        } else if (selectedOption === "riskAndVolatility") {
-            $(".riskAndVolatilitySection").show();
+            document.getElementById("symbolTicker").required = true;
+            document.getElementsByClassName("rvspotSection").required = false;
+            document.getElementsByClassName("rvspotSection").value = 0;
+        } else {
+            $(".rvspotSection").show();
+            document.getElementById("symbolTicker").required = false;
+            document.getElementsByClassName("rvspotSection").required = true;
+            document.getElementById("symbolTicker").value = "";
         }
     });
 });

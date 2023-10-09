@@ -14,13 +14,16 @@ def get_r(end_date):
     return r / 100
 
 
-def get_volatility(date):
+def get_volatility_ticker(ticker, date):
     if type(date) is str:
         date = datetime.strptime(date, "%Y-%m-%d")
+    # filter
+    if ticker == "SPX":
+        ticker = "^SPX"
     # create train data is data 10 years before current_date
     end_date = date
     start_date = end_date - timedelta(days=365 * 10)
-    stock_data = yf.download("^SPX", start=start_date, end=end_date)
+    stock_data = yf.download(ticker, start=start_date, end=end_date)
     df_close = stock_data["Close"]
     train_data = df_close
     dSprice = np.diff(train_data.to_numpy())
@@ -28,15 +31,23 @@ def get_volatility(date):
     volatility = math.sqrt(np.mean(dSprice * dSprice / (Sprice * Sprice * 1 / 365)))
     return volatility
 
+def get_volatility(date):
+    return get_volatility_ticker("SPX")
 
-def get_spot(date):
+def get_spot_ticker(ticker, date):
     if type(date) is str:
         date = datetime.strptime(date, "%Y-%m-%d")
+    if ticker == "SPX":
+        ticker = "^SPX"
     end_date = date
     start_date = end_date - timedelta(days=1)
-    stock_data = yf.download("^SPX", start=start_date, end=end_date)
+    stock_data = yf.download(ticker, start=start_date, end=end_date)
     df_close = stock_data["Close"]
     return df_close.iloc[-1]
+
+
+def get_spot(date):
+    return get_spot_ticker("SPX", date)
 
 
 def calculate_bs(strike_price, expired_date, current_date):
@@ -175,12 +186,12 @@ def calculate_mc(strike_price, expired_date, current_date):
 
 def calculate_mc_2(spot, strike_price, expired_date, current_date, r, vol):
     if type(expired_date) is str:
-        expired_date = datetime.strptime(expired_date, "%Y-%m-%d")
+        expired_date = datetime.strptime(expired_date, "%Y-%m-%d").date()
     if type(current_date) is str:
-        current_date = datetime.strptime(current_date, "%Y-%m-%d")
+        current_date = datetime.strptime(current_date, "%Y-%m-%d").date()
 
     # _todo remove duplicate code
-    dte = (expired_date - current_date.date()).days
+    dte = (expired_date - current_date).days
     S = spot
     K = strike_price
     M = 1000

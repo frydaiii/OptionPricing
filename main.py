@@ -10,7 +10,9 @@ from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from typing import Optional
 from back.models import OptionData
-from back.calculators import calculate_bs, calculate_mc, calculate_bs_2, calculate_mc_2, get_r, get_spot, get_volatility
+from back.calculators import calculate_bs, calculate_mc, \
+    calculate_bs_2, calculate_mc_2, get_r, get_spot, \
+        get_volatility, get_volatility_ticker, get_spot_ticker
 import yfinance as yf
 import QuantLib as ql
 import numpy as np
@@ -19,7 +21,7 @@ import uvicorn
 import os
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -110,17 +112,34 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
 
 # calculate price request model
 class CalPriceRequest(BaseModel):
+    ticker: str
     selectedDate: str
+    spot: int
     strike: int
     expireDate: str
+    r: float
+    v: float
 @app.post("/calculate-price")
 async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     strike = req.strike
-    selectedDate = datetime.strptime(req.selectedDate, "%Y-%m-%d")
-    expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d")
-    
-    bs_price = calculate_bs(strike, expireDate, selectedDate)
-    mc_price = calculate_mc(strike, expireDate, selectedDate)
+    selectedDate = datetime.strptime(req.selectedDate, "%Y-%m-%d").date()
+    expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d").date()
+
+    r = 0
+    v = 0
+    spot = 0
+    if req.ticker != "":
+        r = get_r(req.selectedDate)
+        v = get_volatility_ticker(req.ticker, selectedDate)
+        spot = get_spot_ticker(req.ticker, selectedDate)
+    else:
+        r = req.r
+        v = req.v
+        spot = req.spot
+     
+     # calculate_bs_2(spot, strike_price, expired_date, current_date, r, vol)
+    bs_price = calculate_bs_2(spot, strike, expireDate, selectedDate, r, v)
+    mc_price = calculate_mc_2(spot, strike, expireDate, selectedDate, r, v)
     data_query = (
         select(OptionData)
         .where(OptionData.quote_date == selectedDate)
@@ -131,25 +150,30 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     options = db.execute(data_query).scalars().all()
     market_price = 0 if len(options) == 0 else options[0].c_last
 
-    # print to image
-    bar_width = 0.2
+    # # print to image
+    # bar_width = 0.2
 
-    # Create the bar chart
-    plt.clf()
-    plt.bar(0, mc_price, width=bar_width, label='MC Prices', align='center')
-    plt.bar(bar_width, bs_price, width=bar_width, label='BS Prices', align='center')
-    plt.bar(2*bar_width, market_price, width=bar_width, label='Market Prices', align='center')
+    # # Create the bar chart
+    # plt.clf()
+    # plt.bar(0, mc_price, width=bar_width, label='MC Prices', align='center')
+    # plt.bar(bar_width, bs_price, width=bar_width, label='BS Prices', align='center')
+    # plt.bar(2*bar_width, market_price, width=bar_width, label='Market Prices', align='center')
 
-    # Customize the chart
-    plt.ylabel('Prices')
-    plt.title('Comparison of Prices')
-    plt.legend()
+    # # Customize the chart
+    # plt.ylabel('Prices')
+    # plt.title('Comparison of Prices')
+    # plt.legend()
 
-    # Show the plot
-    img_path = "static/foo.png"
-    plt.savefig(img_path)
+    # # Show the plot
+    # img_path = "static/foo.png"
+    # plt.savefig(img_path)
 
-    return 1
+    res = {
+        "bs_price": bs_price,
+        "mc_price": mc_price,
+        "market_price": market_price
+    }
+    return res
 
 
 @app.post("/calculate-price-2")
