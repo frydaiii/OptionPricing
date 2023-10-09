@@ -268,11 +268,13 @@ $(document).ready(function() {
                 // Handle the response from the calculation API
                 console.log('Calculation result:', response);
                 // Create an image element and set its src attribute
-                var imageElement = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
+                var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
+                var imageElement2 = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
                 
                 // Append the image to the image container
                 $('#image-container-2').empty();
                 $('#image-container-2').append(imageElement);
+                $('#image-container-2').append(imageElement2);
                 // You can display the result or take further actions here
             },
             error: function(error) {

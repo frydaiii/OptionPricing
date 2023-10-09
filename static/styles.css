@@ -104,3 +104,9 @@ select {
     display: flex;
     justify-content: center;
 }
+
+#image-container-2 {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}

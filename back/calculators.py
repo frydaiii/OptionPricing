@@ -32,7 +32,7 @@ def get_volatility_ticker(ticker, date):
     return volatility
 
 def get_volatility(date):
-    return get_volatility_ticker("SPX")
+    return get_volatility_ticker("SPX", date)
 
 def get_spot_ticker(ticker, date):
     if type(date) is str:

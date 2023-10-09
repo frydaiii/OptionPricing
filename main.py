@@ -175,9 +175,12 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     }
     return res
 
-
+class CalPriceRequest2(BaseModel):
+    selectedDate: str
+    strike: int
+    expireDate: str
 @app.post("/calculate-price-2")
-async def calculate_prices(req: CalPriceRequest, db: Session = Depends(get_db)):
+async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db)):
     strike = req.strike
     selectedDate = req.selectedDate
     expireDate = req.expireDate
@@ -224,17 +227,17 @@ async def calculate_prices(req: CalPriceRequest, db: Session = Depends(get_db)):
             prices_mc.append(calculate_mc_2(spot, strike, expire_date, selectedDate, r, vol))
     
     # plot and save to image
+    plt.clf()
     plt.ylabel('Prices')
     plt.title('Comparison of Prices')
     if len(strike_prices) > 0:
-        plt.clf()
         plt.xlabel('Strike Prices')
         plt.plot(strike_prices, market_prices, "-ro", label="Market prices", markersize=2)
         plt.plot(strike_prices, prices_bs, "-go", label="Black-Scholes prices", markersize=2)
         plt.plot(strike_prices, prices_mc, "-bo", label="Monte Carlo prices", markersize=2)
     else:
-        plt.clf()
         plt.xlabel('Expire Date')
+        plt.xticks(rotation=90)
         plt.plot(expire_dates, market_prices, "-ro", label="Market prices")
         plt.plot(expire_dates, prices_bs, "-go", label="Black-Scholes prices")
         plt.plot(expire_dates, prices_mc, "-bo", label="Monte Carlo prices")
@@ -242,8 +245,31 @@ async def calculate_prices(req: CalPriceRequest, db: Session = Depends(get_db)):
     plt.legend()
 
     # Show the plot
-    img_path = "static/bar.png"
-    plt.savefig(img_path)
+    img1_path = "static/foo.png"
+    plt.savefig(img1_path)
+
+    plt.clf()
+    plt.ylabel('Points')
+    plt.title('Comparison of MdAPE points')
+    prices_mc = np.array(prices_mc)
+    prices_bs = np.array(prices_bs)
+    market_prices = np.array([float(p) for p in market_prices])
+    mc_mdape = np.abs((prices_mc-market_prices)/market_prices)
+    bs_mdape = np.abs((prices_bs-market_prices)/market_prices)
+    if len(strike_prices) > 0:
+        plt.xlabel('Strike Prices')
+        plt.plot(strike_prices, bs_mdape, "-go", label="Black-Scholes MdAPE", markersize=2)
+        plt.plot(strike_prices, mc_mdape, "-bo", label="Monte Carlo MdAPE", markersize=2)
+    else:
+        plt.xlabel('Expire Date')
+        plt.xticks(rotation=90)
+        plt.plot(expire_dates, bs_mdape, "-go", label="Black-Scholes MdAPE")
+        plt.plot(expire_dates, mc_mdape, "-bo", label="Monte Carlo MdAPE")
+
+    plt.legend()
+    # Show the plot
+    img2_path = "static/bar.png"
+    plt.savefig(img2_path)
 
     return 1
 
