@@ -1,18 +1,17 @@
-from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, Depends, Form
+from datetime import datetime
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from databases import Database
 from matplotlib import pyplot as plt
-from sqlalchemy import create_engine, Column, Integer, String, Date, Time, DECIMAL, MetaData, func, select
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from typing import Optional
 from back.models import OptionData
-from back.calculators import calculate_bs, calculate_mc, \
-    calculate_bs_2, calculate_mc_2, get_r, get_spot, \
-        get_volatility, get_volatility_ticker, get_spot_ticker
+from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
+        get_volatility, get_volatility_ticker, get_spot_ticker, \
+        calculate_garch
 import yfinance as yf
 import QuantLib as ql
 import numpy as np
@@ -21,7 +20,7 @@ import uvicorn
 import os
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -128,10 +127,12 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     r = 0
     v = 0
     spot = 0
+    garch_price = 0
     if req.ticker != "":
         r = get_r(req.selectedDate)
         v = get_volatility_ticker(req.ticker, selectedDate)
         spot = get_spot_ticker(req.ticker, selectedDate)
+        garch_price = calculate_garch(strike, expireDate, selectedDate, req.ticker)
     else:
         r = req.r
         v = req.v
@@ -150,29 +151,14 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     options = db.execute(data_query).scalars().all()
     market_price = 0 if len(options) == 0 else options[0].c_last
 
-    # # print to image
-    # bar_width = 0.2
-
-    # # Create the bar chart
-    # plt.clf()
-    # plt.bar(0, mc_price, width=bar_width, label='MC Prices', align='center')
-    # plt.bar(bar_width, bs_price, width=bar_width, label='BS Prices', align='center')
-    # plt.bar(2*bar_width, market_price, width=bar_width, label='Market Prices', align='center')
-
-    # # Customize the chart
-    # plt.ylabel('Prices')
-    # plt.title('Comparison of Prices')
-    # plt.legend()
-
-    # # Show the plot
-    # img_path = "static/foo.png"
-    # plt.savefig(img_path)
-
     res = {
         "bs_price": bs_price,
-        "mc_price": mc_price,
-        "market_price": market_price
+        "mc_price": mc_price
     }
+    if garch_price != 0:
+        res["garch_price"] = garch_price
+    if market_price != 0:
+        res["market_price"] = market_price
     return res
 
 class CalPriceRequest2(BaseModel):
@@ -190,6 +176,7 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
     vol = get_volatility(selectedDate)
     prices_bs = []
     prices_mc = []
+    prices_garch = []
     market_prices = []
     strike_prices = []
     expire_dates = []
@@ -209,6 +196,7 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
         for strike_price in strike_prices:
             prices_bs.append(calculate_bs_2(spot, strike_price, expireDate, selectedDate, r, vol))
             prices_mc.append(calculate_mc_2(spot, strike_price, expireDate, selectedDate, r, vol))
+            prices_garch.append(calculate_garch(strike_price, expireDate, selectedDate))
 
     else:
         query = (
@@ -225,6 +213,7 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
         for expire_date in expire_dates:
             prices_bs.append(calculate_bs_2(spot, strike, expire_date, selectedDate, r, vol))
             prices_mc.append(calculate_mc_2(spot, strike, expire_date, selectedDate, r, vol))
+            prices_garch.append(calculate_garch(strike, expire_date, selectedDate))
     
     # plot and save to image
     plt.clf()
@@ -235,12 +224,14 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
         plt.plot(strike_prices, market_prices, "-ro", label="Market prices", markersize=2)
         plt.plot(strike_prices, prices_bs, "-go", label="Black-Scholes prices", markersize=2)
         plt.plot(strike_prices, prices_mc, "-bo", label="Monte Carlo prices", markersize=2)
+        plt.plot(strike_prices, prices_garch, "-yo", label="GARCH prices", markersize=2)
     else:
         plt.xlabel('Expire Date')
         plt.xticks(rotation=90)
         plt.plot(expire_dates, market_prices, "-ro", label="Market prices")
         plt.plot(expire_dates, prices_bs, "-go", label="Black-Scholes prices")
         plt.plot(expire_dates, prices_mc, "-bo", label="Monte Carlo prices")
+        plt.plot(expire_dates, prices_garch, "-yo", label="GARCH prices")
 
     plt.legend()
 
@@ -253,18 +244,22 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
     plt.title('Comparison of MdAPE points')
     prices_mc = np.array(prices_mc)
     prices_bs = np.array(prices_bs)
+    prices_garch = np.array(prices_garch)
     market_prices = np.array([float(p) for p in market_prices])
     mc_mdape = np.abs((prices_mc-market_prices)/market_prices)
     bs_mdape = np.abs((prices_bs-market_prices)/market_prices)
+    garch_mdape = np.abs((prices_garch-market_prices)/market_prices)
     if len(strike_prices) > 0:
         plt.xlabel('Strike Prices')
         plt.plot(strike_prices, bs_mdape, "-go", label="Black-Scholes MdAPE", markersize=2)
         plt.plot(strike_prices, mc_mdape, "-bo", label="Monte Carlo MdAPE", markersize=2)
+        plt.plot(strike_prices, garch_mdape, "-yo", label="GARCH MdAPE", markersize=2)
     else:
         plt.xlabel('Expire Date')
         plt.xticks(rotation=90)
         plt.plot(expire_dates, bs_mdape, "-go", label="Black-Scholes MdAPE")
         plt.plot(expire_dates, mc_mdape, "-bo", label="Monte Carlo MdAPE")
+        plt.plot(expire_dates, garch_mdape, "-yo", label="GARCH MdAPE")
 
     plt.legend()
     # Show the plot

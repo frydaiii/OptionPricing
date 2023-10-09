@@ -72,10 +72,10 @@ def calculate_mc(strike_price, expired_date, current_date):
     # vol = iv
     S = df_close.iloc[-1]
     K = strike_price
-    M = 5
+    M = 5000
     N = 100
     T = dte/365
-    r = get_r(end_date)
+    r = 0.0015
 
     print("Spot: " + str(S) + " strike: " + str(K) + " dte: " + str(dte) + 
           " volatility: " + str(vol) + " r: " + str(r))
@@ -120,6 +120,8 @@ strike = 3275
 selectedDate = datetime.strptime("01/02/2020", "%m/%d/%Y")
 expireDate = datetime.strptime("2020-03-31", "%Y-%m-%d")
 # print(calculate_mc(strike, expireDate, selectedDate))
+print(get_r(selectedDate))
+
 
 def geo_paths(S, T, r, q, sigma, steps, N):
     """

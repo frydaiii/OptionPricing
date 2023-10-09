@@ -34,7 +34,23 @@ $(document).ready(function() {
         });
     }
 
+    function getCurrentDate() {
+        const today = new Date();
+    
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const day = String(today.getDate()).padStart(2, '0');
+    
+        return `${year}-${month}-${day}`;
+    }
+
     // Initialize the datepicker
+    // _todo add constraint to datepicker
+    $("#expirationDate").datepicker({
+        // minDate: getCurrentDate(),
+        changeYear: true,
+        dateFormat: 'yy-mm-dd'
+    });
     year = 2020;
     $("#tradingDate").datepicker({
         minDate: new Date(year, 0, 1),
@@ -42,17 +58,17 @@ $(document).ready(function() {
         dateFormat: 'yy-mm-dd',
         onSelect: function(date){
 
-            var selectedDate = new Date(date);
-            var msecsInADay = 86400000;
-            var endDate = new Date(selectedDate.getTime() + msecsInADay);
+        //     var selectedDate = new Date(date);
+        //     var msecsInADay = 86400000;
+        //     var endDate = new Date(selectedDate.getTime() + msecsInADay);
     
-           //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
-            $("#expirationDate").datepicker({
-                minDate: endDate,
-                changeYear: true,
-                dateFormat: 'yy-mm-dd'
-            });
-            // $("#endDatePicker").datepicker( "option", "maxDate", '+2y' );
+        //    //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
+        //     $("#expirationDate2").datepicker({
+        //         minDate: endDate,
+        //         changeYear: true,
+        //         dateFormat: 'yy-mm-dd'
+        //     });
+        //     // $("#endDatePicker").datepicker( "option", "maxDate", '+2y' );
     
         }
     });
@@ -77,132 +93,6 @@ $(document).ready(function() {
     
         }
     });
-
-    // $("#expirationDate").datepicker({
-    //     changeYear: true
-    // });
-
-
-    // // Function to fetch options from the API and display them
-    // function fetchAndDisplayOptions(pageNumber, optionsPerPage, tickerSymbol, selectedDate) {
-    //     // Make a request to the /list-options API with page and perPage parameters
-    //     $.ajax({
-    //         url: '/list-options', // Replace with your API endpoint
-    //         method: 'POST',
-    //         dataType: 'json',
-    //         contentType: 'application/json',
-    //         data: JSON.stringify({
-    //             tickerSymbol: tickerSymbol,
-    //             selectedDate: selectedDate,
-    //             expireDate: expireDate,
-    //             strike: Number(strike),
-    //             page: pageNumber,
-    //             perPage: optionsPerPage
-    //         }),
-    //         success: function(response) {
-    //             console.log(response)
-    //             // Update the options list with the received data
-    //             updateOptionsList(response.options);
-
-    //             // Update pagination controls
-    //             updatePagination(Math.floor(response.total_records / optionsPerPage) + 1, pageNumber);
-    //         },
-    //         error: function(error) {
-    //             console.error('Error fetching data from the API: ' + error.statusText);
-    //         }
-    //     });
-    // }
-
-    // // Function to update the options list with the received data
-    // function updateOptionsList(options) {
-    //     var optionsList = $("#options-list");
-    //     optionsList.empty(); // Clear existing options
-
-    //     // Populate the list with the received options
-    //     // Check if options is defined and is an array
-    //     if (Array.isArray(options)) {
-    //         // Populate the list with the received options
-    //         options.forEach(function(option) {
-    //             // Extract relevant information from the option object
-    //             var strike = option.strike;
-    //             var expireDate = option.expire_date;
-    //             var cAsk = option.c_ask;
-    //             var cBid = option.c_bid;
-    //             var cLast = option.c_last;
-
-    //             // Create a formatted string for the option
-    //             var optionText = "Strike: " + strike + ", Expire Date: " + expireDate + ", Call Ask: " + cAsk + ", Call Bid: " + cBid + ", Call Last: " + cLast;
-
-    //             // Create a list item for the option and append it to the options list
-    //             var listItem = $("<li>").text(optionText);
-    //             var calculateButton = $("<button>").text("Calculate Price");
-    //             calculateButton.on("click", function() {
-    //                 // Call a function to send a request to /calculate-price
-    //                 calculatePrice(selectedDate, strike, expireDate);
-    //             });
-    //             listItem.append(calculateButton);
-    //             optionsList.append(listItem);
-    //         });
-    //     } else {
-    //         console.error('Invalid options data:', options);
-    //     }
-    // }
-
-    // // Function to update the pagination controls
-    // function updatePagination(totalPages, currentPage) {
-    //     var paginationControls = $("#pagination-controls");
-    //     paginationControls.empty(); // Clear existing controls
-
-    //     // Calculate the number of buttons to display (e.g., 10 at a time)
-    //     var buttonsToShow = 10;
-    //     var startPage = Math.max(currentPage - Math.floor(buttonsToShow / 2), 1);
-    //     var endPage = Math.min(startPage + buttonsToShow - 1, totalPages);
-
-    //     // Add "First Page" button
-    //     if (currentPage > 1) {
-    //         var firstPageButton = $("<button>").text("First Page");
-    //         firstPageButton.on("click", function() {
-    //             updatePagination(totalPages, 1);
-    //         });
-    //         paginationControls.append(firstPageButton);
-    //     }
-
-    //     // Create "Previous" button if not on the first page
-    //     if (currentPage > 1) {
-    //         var prevButton = $("<button>").text("Previous");
-    //         prevButton.on("click", function() {
-    //             fetchAndDisplayOptions(currentPage - 1, optionsPerPage, tickerSymbol, selectedDate);
-    //         });
-    //         paginationControls.append(prevButton);
-    //     }
-
-    //     // Create page number buttons
-    //     for (var i = startPage; i <= endPage; i++) {
-    //         var pageButton = $("<button>").text(i);
-    //         pageButton.on("click", function() {
-    //             fetchAndDisplayOptions(parseInt($(this).text()), optionsPerPage, tickerSymbol, selectedDate);
-    //         });
-    //         paginationControls.append(pageButton);
-    //     }
-
-    //     // Create "Next" button if not on the last page
-    //     if (currentPage < totalPages) {
-    //         var nextButton = $("<button>").text("Next");
-    //         nextButton.on("click", function() {
-    //             fetchAndDisplayOptions(currentPage + 1, optionsPerPage, tickerSymbol, selectedDate);
-    //         });
-    //         paginationControls.append(nextButton);
-    //     }
-
-    //     // Add "Last Page" button
-    //     if (currentPage < totalPages) {
-    //         var lastPageButton = $("<button>").text("Last Page");
-    //         lastPageButton.on("click", function() {
-    //             updatePagination(totalPages, totalPages);
-    //         });
-    //         paginationControls.append(lastPageButton);
-    //     }
-    // }
 
     function calculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v) {
         var requestData = {
@@ -240,10 +130,10 @@ $(document).ready(function() {
                     resultList.append(listItem);
                 });
 
-                // Scroll to the results
-                $('html, body').animate({
-                    scrollTop: $("#results").offset().top
-                }, 500);
+                // // Scroll to the results
+                // $('html, body').animate({
+                //     scrollTop: $("#results").offset().top
+                // }, 500);
             },
             error: function(error) {
                 console.error('Error calculating price:', error.statusText);
@@ -301,12 +191,6 @@ $(document).ready(function() {
         v = parseFloat($("#volatility").val());
 
         calculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v)
-        // if (strike && expireDate) {
-        //     calculatePrice(selectedDate, strike, expireDate)
-        // } else {
-        //     // Make the API request after form submission
-        //     fetchAndDisplayOptions(1, optionsPerPage, tickerSymbol, selectedDate);
-        // }
     });
     $("#form2").submit(function(event) {
         event.preventDefault(); // Prevent the default form submission
@@ -334,7 +218,7 @@ $(document).ready(function() {
     $("#expirationDateSection").hide();
 
     // Listen for changes to the radio buttons
-    $("input[name='optionChoice']").change(function() {
+    $("input[name='optionChoice2']").change(function() {
         var selectedOption = $(this).val();
 
         // Hide both sections
@@ -365,18 +249,33 @@ $(document).ready(function() {
 
         // Hide both sections
         $("#symbolTickerSection").hide();
+        $("#tradingDate").hide();
         $(".rvspotSection").hide();
 
         // Show the selected section
-        if (selectedOption === "symbolTicker") {
+        if (selectedOption === "calToday") {
             $("#symbolTickerSection").show();
             document.getElementById("symbolTicker").required = true;
-            document.getElementsByClassName("rvspotSection").required = false;
-            document.getElementsByClassName("rvspotSection").value = 0;
+            document.getElementById("spotPrice").required = false;
+            document.getElementById("riskFreeRate").required = false;
+            document.getElementById("volatility").required = false;
+            document.getElementById("tradingDate").required = false;
+            document.getElementById("spotPrice").value = 0;
+            document.getElementById("riskFreeRate").value = 0;
+            document.getElementById("volatility").value = 0;
+            document.getElementById("tradingDate").value = getCurrentDate();
+            // document.getElementsByClassName("rvspotSection").value = 0;
         } else {
             $(".rvspotSection").show();
+            $("#tradingDate").show();
             document.getElementById("symbolTicker").required = false;
-            document.getElementsByClassName("rvspotSection").required = true;
+            document.getElementById("spotPrice").required = true;
+            document.getElementById("riskFreeRate").required = true;
+            document.getElementById("volatility").required = true;
+            document.getElementById("tradingDate").required = true;
+            // document.getElementById("spotPrice").value = '';
+            // document.getElementById("riskFreeRate").value = '';
+            // document.getElementById("volatility").value = '';
             document.getElementById("symbolTicker").value = "";
         }
     });

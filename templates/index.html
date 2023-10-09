@@ -18,19 +18,13 @@
 
         <div id="tab1" class="tab-content current">
             <form class="optionForm" id="form1">
-                <!-- <div class="form-group">
-                    <label for="optionSelect1">Choose ticker:</label>
-                    <select id="optionSelect1" required>
-                        <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
-                    </select>
-                </div> -->
                 <label for="optionChoice">Choose an Option:</label>
                 <div class="radio-group">
                     <label>
-                        <input type="radio" name="optionChoice" value="symbolTicker"> Enter Symbol Ticker
+                        <input type="radio" name="optionChoice" value="calToday"> Calculate today's option
                     </label>
                     <label>
-                        <input type="radio" name="optionChoice" value="riskAndVolatility"> Enter Risk-Free Rate and Volatility
+                        <input type="radio" name="optionChoice" value="calSpecific"> Calculate specific option
                     </label>
                 </div>
                 <br>
@@ -40,7 +34,7 @@
                     <input type="text" id="symbolTicker" name="symbolTicker" placeholder="Enter Symbol Ticker" required>
                 </div>
                 
-                <div class="form-group">
+                <div class="rvspotSection form-group">
                     <label for="datepicker">Select a trading Date:</label>
                     <input type="text" id="tradingDate" name="tradingDate" class="datepicker" placeholder="Select a date" required> 
                 </div>
@@ -93,10 +87,10 @@
 
                 <div class="radio-group">
                     <label>
-                        <input type="radio" name="optionChoice" value="strikePrice"> Enter Strike Price
+                        <input type="radio" name="optionChoice2" value="strikePrice"> Enter Strike Price
                     </label>
                     <label>
-                        <input type="radio" name="optionChoice" value="expirationDate"> Pick Expiration Date
+                        <input type="radio" name="optionChoice2" value="expirationDate"> Pick Expiration Date
                     </label>
                 </div>
                 <div id="strikePriceSection" class="form-group">
