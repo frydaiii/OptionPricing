@@ -18,11 +18,25 @@
 
         <div id="tab1" class="tab-content current">
             <form class="optionForm" id="form1">
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="optionSelect1">Choose ticker:</label>
                     <select id="optionSelect1" required>
                         <option value="" disabled selected hidden style="color: gray;">Select ticker symbol</option>
                     </select>
+                </div> -->
+                <label for="optionChoice">Choose an Option:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="optionChoice" value="symbolTicker"> Enter Symbol Ticker
+                    </label>
+                    <label>
+                        <input type="radio" name="optionChoice" value="riskAndVolatility"> Enter Risk-Free Rate and Volatility
+                    </label>
+                </div>
+
+                <div id="symbolTickerSection" class="form-group">
+                    <label for="symbolTicker">Enter Symbol Ticker:</label>
+                    <input type="text" id="symbolTicker" name="symbolTicker" placeholder="Enter Symbol Ticker" required>
                 </div>
                 
                 <div class="form-group">
@@ -38,6 +52,15 @@
                 <div class="form-group">
                     <label for="strikePrice">Enter Strike Price:</label>
                     <input type="number" id="strikePrice" name="strikePrice" placeholder="Enter Strike Price">
+                </div>
+
+                <div class="riskAndVolatilitySection form-group">
+                    <label for="riskFreeRate">Enter Risk-Free Rate:</label>
+                    <input type="number" id="riskFreeRate" name="riskFreeRate" placeholder="Enter Risk-Free Rate" required>
+                </div>
+                <div class="riskAndVolatilitySection form-group">
+                    <label for="volatility">Enter Volatility:</label>
+                    <input type="number" id="volatility" name="volatility" placeholder="Enter Volatility" required>
                 </div>
                 
                 <input type="submit" value="Submit">

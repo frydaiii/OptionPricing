@@ -331,4 +331,24 @@ $(document).ready(function() {
             document.getElementById("strikePrice2").value = "";
         }
     });
+
+    $("#symbolTickerSection").hide();
+    $(".riskAndVolatilitySection").hide();
+
+    // Listen for changes to the radio buttons
+    $("input[name='optionChoice']").change(function() {
+        // Get the selected option
+        var selectedOption = $("input[name='optionChoice']:checked").val();
+
+        // Hide both sections
+        $("#symbolTickerSection").hide();
+        $(".riskAndVolatilitySection").hide();
+
+        // Show the selected section
+        if (selectedOption === "symbolTicker") {
+            $("#symbolTickerSection").show();
+        } else if (selectedOption === "riskAndVolatility") {
+            $(".riskAndVolatilitySection").show();
+        }
+    });
 });
