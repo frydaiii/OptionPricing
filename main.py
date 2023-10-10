@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from typing import Optional
-from back.models import OptionData
+from back.models import Option2019
 from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
         get_volatility, get_volatility_ticker, get_spot_ticker, \
         calculate_garch
@@ -20,7 +20,7 @@ import uvicorn
 import os
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -82,25 +82,27 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
     date_with_dashes = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d")
     # Query the database for rows that match the ticker symbol and date with pagination
     data_query = (
-        select(OptionData)
-        .where(OptionData.quote_date == date_with_dashes)
-        .where(OptionData.c_volume > 0)
+        select(Option2019)
+        .where(Option2019.quotedate == date_with_dashes)
+        .where(Option2019.volume > 0)
+        .where(Option2019.type == "call")
     )
 
     total_records_query = (
-        select(func.count(OptionData.id))
-        .where(OptionData.quote_date == date_with_dashes)
-        .where(OptionData.c_volume > 0)
+        select(func.count(Option2019.id))
+        .where(Option2019.quotedate == date_with_dashes)
+        .where(Option2019.volume > 0)
+        .where(Option2019.type == "call")
     )
 
     if expire_date != "":
         expire_date = datetime.strptime(option_request.expireDate, "%Y-%m-%d").strftime("%Y-%m-%d")
-        data_query = data_query.where(OptionData.expire_date == expire_date)
-        total_records_query = total_records_query.where(OptionData.expire_date == expire_date)
+        data_query = data_query.where(Option2019.expiration == expire_date)
+        total_records_query = total_records_query.where(Option2019.expiration == expire_date)
     
     if strike != 0:
-        data_query = data_query.where(OptionData.strike == strike)
-        total_records_query = total_records_query.where(OptionData.strike == strike)
+        data_query = data_query.where(Option2019.strike == strike)
+        total_records_query = total_records_query.where(Option2019.strike == strike)
 
     data_query = data_query.offset(offset).limit(per_page)
 
@@ -142,14 +144,15 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
     bs_price = calculate_bs_2(spot, strike, expireDate, selectedDate, r, v)
     mc_price = calculate_mc_2(spot, strike, expireDate, selectedDate, r, v)
     data_query = (
-        select(OptionData)
-        .where(OptionData.quote_date == selectedDate)
-        .where(OptionData.expire_date == expireDate)
-        .where(OptionData.strike == strike)
-        .where(OptionData.c_volume > 0)
+        select(Option2019)
+        .where(Option2019.quotedate == selectedDate)
+        .where(Option2019.expiration == expireDate)
+        .where(Option2019.strike == strike)
+        .where(Option2019.volume > 0)
+        .where(Option2019.type == "call")
     )
     options = db.execute(data_query).scalars().all()
-    market_price = 0 if len(options) == 0 else options[0].c_last
+    market_price = 0 if len(options) == 0 else options[0].last
 
     res = {
         "bs_price": bs_price,
@@ -182,15 +185,16 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
     expire_dates = []
     if expireDate != "":
         query = (
-            select(OptionData)
-            .where(OptionData.quote_date == selectedDate)
-            .where(OptionData.expire_date == expireDate)
-            .where(OptionData.c_volume > 0)
-            .order_by(OptionData.strike)
+            select(Option2019)
+            .where(Option2019.quotedate == selectedDate)
+            .where(Option2019.expiration == expireDate)
+            .where(Option2019.volume > 0)
+            .where(Option2019.type == "call")
+            .order_by(Option2019.strike)
         )
         data = db.execute(query)
         data = data.scalars().all()
-        market_prices = [opt.c_last for opt in data]
+        market_prices = [opt.last for opt in data]
         strike_prices = [int(opt.strike) for opt in data]
         expireDate = datetime.strptime(expireDate, "%Y-%m-%d").date()
         for strike_price in strike_prices:
@@ -200,16 +204,17 @@ async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db))
 
     else:
         query = (
-            select(OptionData)
-            .where(OptionData.quote_date == selectedDate)
-            .where(OptionData.strike == strike)
-            .where(OptionData.c_volume > 0)
-            .order_by(OptionData.expire_date)
+            select(Option2019)
+            .where(Option2019.quotedate == selectedDate)
+            .where(Option2019.strike == strike)
+            .where(Option2019.volume > 0)
+            .where(Option2019.type == "call")
+            .order_by(Option2019.expiration)
         )
         data = db.execute(query)
         data = data.scalars().all()
-        market_prices = [opt.c_last for opt in data]
-        expire_dates = [opt.expire_date for opt in data]
+        market_prices = [opt.last for opt in data]
+        expire_dates = [opt.expiration for opt in data]
         for expire_date in expire_dates:
             prices_bs.append(calculate_bs_2(spot, strike, expire_date, selectedDate, r, vol))
             prices_mc.append(calculate_mc_2(spot, strike, expire_date, selectedDate, r, vol))

@@ -51,7 +51,7 @@ $(document).ready(function() {
         changeYear: true,
         dateFormat: 'yy-mm-dd'
     });
-    year = 2020;
+    year = 2019;
     $("#tradingDate").datepicker({
         minDate: new Date(year, 0, 1),
         maxDate: new Date(year, 11, 31),
