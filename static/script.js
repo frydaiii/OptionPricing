@@ -141,8 +141,9 @@ $(document).ready(function() {
         });
     }
 
-    function calculatePrice2(selectedDate, strike, expireDate) {
+    function calculatePrice2(ticker, selectedDate, strike, expireDate) {
         var requestData = {
+            ticker: ticker,
             selectedDate: selectedDate,
             strike: strike,
             expireDate: expireDate
@@ -202,7 +203,7 @@ $(document).ready(function() {
         strike = Number($("#strikePrice2").val());
 
         // Make the API request after form submission
-        calculatePrice2(selectedDate, strike, expireDate);
+        calculatePrice2(tickerSymbol, selectedDate, strike, expireDate);
     });
 
     $(".tab-link").on("click", function() {

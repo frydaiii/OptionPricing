@@ -4,7 +4,26 @@ import QuantLib as ql
 import numpy as np
 import math
 import arch
+import requests
+from bs4 import BeautifulSoup
+import re
+import pandas as pd
 
+def get_data(start_date, end_date):
+    start_date = start_date.strftime("%Y-%m-%d")
+    end_date = end_date.strftime("%Y-%m-%d")
+    file_path = "spx_historical_data_2008_2020.csv"
+
+    # Read the CSV file into a DataFrame
+    historical_data = pd.read_csv(file_path)
+
+    # Convert the 'Date' column to a datetime object
+    historical_data['Date'] = pd.to_datetime(historical_data['Date'], utc=True)
+
+    # Filter the data based on the date range
+    filtered_data = historical_data[(historical_data['Date'] >= start_date) & (historical_data['Date'] <= end_date)]
+
+    return filtered_data
 
 def get_r(end_date):
     # get risk free rate, is us treasury bonds in 3 months
@@ -24,7 +43,13 @@ def get_volatility_ticker(ticker, date):
     # create train data is data 10 years before current_date
     end_date = date
     start_date = end_date - timedelta(days=365 * 10)
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
+
+    stock_data = {}
+    if ticker == "^SPX":
+        stock_data = get_data(start_date, end_date)
+    else:
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
+
     df_close = stock_data["Close"]
     train_data = df_close
     dSprice = np.diff(train_data.to_numpy())
@@ -44,7 +69,13 @@ def get_spot_ticker(ticker, date):
         ticker = "^SPX"
     end_date = date
     start_date = end_date - timedelta(days=3)
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
+
+    stock_data = {}
+    if ticker == "^SPX":
+        stock_data = get_data(start_date, end_date)
+    else:
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
+
     df_close = stock_data["Close"]
     return df_close.iloc[-1]
 
@@ -57,7 +88,9 @@ def calculate_bs(strike_price, expired_date, current_date):
     # create train data is data 10 years before current_date
     end_date = current_date
     start_date = end_date - timedelta(days=365 * 10)
-    stock_data = yf.download("^SPX", start=start_date, end=end_date)
+
+    stock_data = get_data(start_date, end_date)
+       
     df_close = stock_data["Close"]
     #   df_log = np.log(df_close)
     train_data = df_close
@@ -153,7 +186,7 @@ def calculate_mc(strike_price, expired_date, current_date):
     # precompute constants
     end_date = current_date
     start_date = end_date - timedelta(days=365 * 10)
-    stock_data = yf.download("^SPX", start=start_date, end=end_date)
+    stock_data = get_data(start_date, end_date)
     df_close = stock_data["Close"]
     train_data = df_close
     dte = (expired_date - df_close.index[-1]).days
@@ -237,7 +270,7 @@ us_risk_prem = {
     "2022": 0.056,
     "2023": 0.057,
 }
-def calculate_garch(strike_price, expire_date, current_date, ticker = ""):
+def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     # expire_date = "2022-12-16"
     if type(expire_date) is str:
         expire_date = datetime.strptime(expire_date, "%Y-%m-%d").date()
@@ -251,7 +284,13 @@ def calculate_garch(strike_price, expire_date, current_date, ticker = ""):
     # get historical data of spx
     end_date = current_date
     start_date = end_date - timedelta(days=365 * 10)
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
+
+    stock_data = {}
+    if ticker == "^SPX":
+        stock_data = get_data(start_date, end_date)
+    else:
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
+       
     df_close = stock_data["Close"]
     df_return = df_close.pct_change().dropna()
 
@@ -267,7 +306,7 @@ def calculate_garch(strike_price, expire_date, current_date, ticker = ""):
     v = results.conditional_volatility
     conditional_var = v**2
     H0 = conditional_var.iloc[-1] / 100
-    r = get_r(current_date) / 365
+    r = r / 365 # the input param is risk free rate in a year
 
     # monte carlo simulation
     steps = dte
@@ -288,3 +327,98 @@ def calculate_garch(strike_price, expire_date, current_date, ticker = ""):
     payoffs = np.maximum(paths[-1] - strike_price, 0)
     option_price = np.mean(payoffs) * np.exp(-r * T)  # discounting back to present value
     return option_price
+
+'''
+The following function call to ivolatility.com and extract the option price from
+response. The response should look like this:
+    <html>
+    <head>
+    <script language="JavaScript"><!--
+    function go() {
+    var d =  parent.calc.document.grek;
+    if (d!=null) {
+    d.oprice_c.value='1000.0031';
+    d.oprice_p.value='0.0000';
+    d.delta_c.value='1.0000';
+    d.delta_p.value='0.0000';
+    d.gamma_c.value='0.0000';
+    d.gamma_p.value='0.0000';
+    d.theta_c.value='-0.0031';
+    d.theta_p.value='0.0000';
+    d.vega_c.value='0.0000';
+    d.vega_p.value='0.0000';
+    d.rho_c.value='0.0030';
+    d.rho_p.value='0.0000';
+    }
+    }
+    //--></script>
+    </head>
+    <body onload="go()">
+    </body>
+    </html>
+'''
+def get_d_oprice_values(spot, strike, expired_date, current_date, r, vol):
+    if type(expired_date) is str:
+        expired_date = datetime.strptime(expired_date, "%Y-%m-%d").date()
+    if type(current_date) is str:
+        current_date = datetime.strptime(current_date, "%Y-%m-%d").date()
+
+    # _todo remove duplicate code
+    dte = (expired_date - current_date).days
+    url = generate_option_calculation_url(dte, vol, r, spot, strike)
+    # Send a GET request to the URL and store the response
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code != 200:
+        print("Request failed with status code:", response.status_code)
+        return None
+
+    # Parse the HTML content of the response using BeautifulSoup
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Use a regular expression to find and extract the values of d.oprice_c.value and d.oprice_p.value
+    script_content = soup.find('script').string
+    d_oprice_c_match = re.search(r"d.oprice_c.value='([^']*)'", script_content)
+    d_oprice_p_match = re.search(r"d.oprice_p.value='([^']*)'", script_content)
+
+    if d_oprice_c_match and d_oprice_p_match:
+        d_oprice_c_value = d_oprice_c_match.group(1)
+        d_oprice_p_value = d_oprice_p_match.group(1)
+        return float(d_oprice_c_value), float(d_oprice_p_value)
+    else:
+        print("One or both values not found")
+        return None, None
+    
+def generate_option_calculation_url(daysexp, vola, intrate, price, strike):
+    # _todo pls note that jsessionid could change when time varying
+    base_url = "https://oic.ivolatility.com/calc/calc_logic.j;jsessionid=bTEB1L1i1P55?"
+    
+    # Define the parameters
+    params = {
+        "is_stock": "0",
+        "SID": "",
+        "currency": "",
+        "rid": "0",
+        "A": "0",
+        "days": "",
+        "country": "E",
+        "daysexp": daysexp,
+        "vola": vola,
+        "intrate": intrate,
+        "price": price,
+        "strike": strike,
+        "opt_price": "",
+        "tp": "",
+        "freq": "12",
+        "divlastdate": "",
+        "divyield": ""
+    }
+    
+    # Create the parameter string
+    param_string = "&".join([f"{key}={value}" for key, value in params.items()])
+    
+    # Combine the base URL and parameter string to form the complete URL
+    complete_url = base_url + param_string
+    
+    return complete_url
