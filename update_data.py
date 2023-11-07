@@ -7,7 +7,7 @@ symbol = "^SPX"
 
 # Set the date range
 start_date = "2008-01-01"
-end_date = datetime.now().strftime("%Y-%m-%d")
+end_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 # Create a ticker object for the S&P 500
 spx_ticker = yf.Ticker(symbol)

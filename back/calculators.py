@@ -7,82 +7,9 @@ import arch
 import requests
 from bs4 import BeautifulSoup
 import re
-import pandas as pd
-
-def get_data(start_date, end_date):
-    start_date = start_date.strftime("%Y-%m-%d")
-    end_date = end_date.strftime("%Y-%m-%d")
-    file_path = "spx_historical_data_2008_2020.csv"
-
-    # Read the CSV file into a DataFrame
-    historical_data = pd.read_csv(file_path)
-
-    # Convert the 'Date' column to a datetime object
-    historical_data['Date'] = pd.to_datetime(historical_data['Date'], utc=True)
-
-    # Filter the data based on the date range
-    filtered_data = historical_data[(historical_data['Date'] >= start_date) & (historical_data['Date'] <= end_date)]
-
-    return filtered_data
-
-def get_r(end_date):
-    # get risk free rate, is us treasury bonds in 3 months
-    if type(end_date) is str:
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
-    tb_rate = yf.download("^IRX", start=end_date - timedelta(days=3), end=end_date)
-    r = tb_rate.iloc[-1]["Close"] or tb_rate.iloc[0]
-    return r / 100
-
-
-def get_volatility_ticker(ticker, date):
-    if type(date) is str:
-        date = datetime.strptime(date, "%Y-%m-%d")
-    # filter
-    if ticker == "SPX":
-        ticker = "^SPX"
-    # create train data is data 10 years before current_date
-    end_date = date
-    start_date = end_date - timedelta(days=365 * 10)
-
-    stock_data = {}
-    if ticker == "^SPX":
-        stock_data = get_data(start_date, end_date)
-    else:
-        stock_data = yf.download(ticker, start=start_date, end=end_date)
-
-    df_close = stock_data["Close"]
-    train_data = df_close
-    dSprice = np.diff(train_data.to_numpy())
-    Sprice = train_data.to_numpy()[:-1]
-    volatility = math.sqrt(np.mean(dSprice * dSprice / (Sprice * Sprice * 1 / 365)))
-    return volatility
-
-
-def get_volatility(date):
-    return get_volatility_ticker("SPX", date)
-
-
-def get_spot_ticker(ticker, date):
-    if type(date) is str:
-        date = datetime.strptime(date, "%Y-%m-%d")
-    if ticker == "SPX":
-        ticker = "^SPX"
-    end_date = date
-    start_date = end_date - timedelta(days=3)
-
-    stock_data = {}
-    if ticker == "^SPX":
-        stock_data = get_data(start_date, end_date)
-    else:
-        stock_data = yf.download(ticker, start=start_date, end=end_date)
-
-    df_close = stock_data["Close"]
-    return df_close.iloc[-1]
-
-
-def get_spot(date):
-    return get_spot_ticker("SPX", date)
-
+from back.utils import *
+from back.garch import garch_1_1
+from statistics import variance
 
 def calculate_bs(strike_price, expired_date, current_date):
     # create train data is data 10 years before current_date
@@ -139,6 +66,7 @@ def calculate_bs(strike_price, expired_date, current_date):
 
 
 def calculate_bs_2(spot, strike_price, expired_date, current_date, r, vol):
+    # _todo wrapper this
     if type(expired_date) is str:
         expired_date = datetime.strptime(expired_date, "%Y-%m-%d")
     if type(current_date) is str:
@@ -270,6 +198,10 @@ us_risk_prem = {
     "2022": 0.056,
     "2023": 0.057,
 }
+# async def numbers(minimum, maximum):
+#     for i in range(minimum, maximum + 1):
+#         await asyncio.sleep(0.9)
+#         yield dict(data=i)
 def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     # expire_date = "2022-12-16"
     if type(expire_date) is str:
@@ -285,28 +217,30 @@ def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     end_date = current_date
     start_date = end_date - timedelta(days=365 * 10)
 
-    stock_data = {}
-    if ticker == "^SPX":
-        stock_data = get_data(start_date, end_date)
-    else:
-        stock_data = yf.download(ticker, start=start_date, end=end_date)
+    stock_data = get_data(start_date, end_date, ticker)
        
     df_close = stock_data["Close"]
     df_return = df_close.pct_change().dropna()
 
     # init and fit model
-    model = arch.arch_model(df_return, vol="GARCH", p=1, q=1, rescale=False)
-    results = model.fit(disp="off")
+    # model = arch.arch_model(df_return, vol="GARCH", p=1, q=1, rescale=False)
+    # results = model.fit(disp="off")
+    daily_r = r / 360 # the input param is risk free rate in a year
+    lbd = us_risk_prem[str(current_date.year)]  # _todo pls update this
+    model = garch_1_1(df_return.to_numpy(), daily_r, lbd)
+    model.optimize()
 
     # generate array of annual volatility, include in and out-sample
-    lbd = us_risk_prem[str(current_date.year)]  # _todo pls update this
-    omega = results.params["omega"]
-    alpha = results.params["alpha[1]"]
-    beta = results.params["beta[1]"]
-    v = results.conditional_volatility
-    conditional_var = v**2
-    H0 = conditional_var.iloc[-1] / 100
-    r = r / 365 # the input param is risk free rate in a year
+    omega = model.params[0]
+    alpha = model.params[1]
+    beta = model.params[2]
+    # omega = results.params["omega"]
+    # alpha = results.params["alpha[1]"]
+    # beta = results.params["beta[1]"]
+    # v = results.conditional_volatility
+    # conditional_var = v**2
+    # H0 = conditional_var.iloc[-1] / 100
+    H0 = variance(df_return)
 
     # monte carlo simulation
     steps = dte
@@ -321,7 +255,7 @@ def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     for i in range(1, steps + 1):
         # _todo this formula could be improved
         H[i] = omega + (alpha * (Z[i - 1] - lbd) ** 2 + beta) * H[i - 1]
-        lnS[i] = lnS[i - 1] + r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
+        lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
 
     paths = np.exp(lnS)
     payoffs = np.maximum(paths[-1] - strike_price, 0)

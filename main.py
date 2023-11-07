@@ -1,7 +1,8 @@
 from datetime import datetime
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from databases import Database
 from matplotlib import pyplot as plt
 from sqlalchemy import create_engine, func, select
@@ -20,7 +21,7 @@ import uvicorn
 import os
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -171,6 +172,10 @@ class CalPriceRequest2(BaseModel):
     expireDate: str
 @app.post("/calculate-price-2")
 async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db)):
+    # response = Response(content_type="text/event-stream")
+    # response.headers["Cache-Control"] = "no-cache"
+    # response.headers["Connection"] = "keep-alive"
+
     ticker = req.ticker
     strike = req.strike
     selectedDate = req.selectedDate
