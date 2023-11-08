@@ -141,6 +141,62 @@ $(document).ready(function() {
         });
     }
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function updateCalculatePrice2Result(client_key) {
+        var still_update = true;
+        var limit = 100;
+        var count = 0;
+        while (still_update && ++count < limit) {
+            await sleep(2000);
+
+            $.ajax({
+                url: '/calculate-price-2',
+                method: 'GET',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: "client_key="+client_key,
+                success: function(response) {
+                    // Handle the response from the calculation API
+                    console.log('Calculation result:', response);
+                    if (response["is_done"]) {
+
+                        // Create an image element and set its src attribute
+                        var imageElement = $('<img>').attr('src', response["img1"] + '?t=' + new Date().getTime());
+                        var imageElement2 = $('<img>').attr('src', response["img2"] + '?t=' + new Date().getTime());
+                        
+                        // Append the image to the image container
+                        $('#image-container-2').empty();
+                        $('#image-container-2').append(imageElement);
+                        $('#image-container-2').append(imageElement2);
+                        still_update = false;
+                    } else {
+                        const para = document.createElement("ul");
+                        const bs = (document.createElement('li'))
+                        bs.appendChild(document.createTextNode("Black Scholes pricing:" + response["count_bs"] + "/" + response["total"]));
+                        const mc = (document.createElement('li'))
+                        mc.appendChild(document.createTextNode("Monte Carlo pricing:" + response["count_mc"] + "/" + response["total"]));
+                        const garch = (document.createElement('li'))
+                        garch.appendChild(document.createTextNode("GARCH pricing:" + response["count_garch"] + "/" + response["total"]));
+                        const bs_ivo = (document.createElement('li'))
+                        bs_ivo.appendChild(document.createTextNode("IVolatility pricing:" + response["count_bs_ivo"] + "/" + response["total"]));
+                        para.appendChild(bs);
+                        para.appendChild(mc);
+                        para.appendChild(garch);
+                        para.appendChild(bs_ivo);
+                        $('#image-container-2').empty();
+                        $('#image-container-2').append(para);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error calculating price:', error.statusText);
+                }
+            });
+        }
+    }
+
     function calculatePrice2(ticker, selectedDate, strike, expireDate) {
         var requestData = {
             ticker: ticker,
@@ -158,15 +214,16 @@ $(document).ready(function() {
             success: function(response) {
                 // Handle the response from the calculation API
                 console.log('Calculation result:', response);
-                // Create an image element and set its src attribute
-                var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
-                var imageElement2 = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
+                // // Create an image element and set its src attribute
+                // var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
+                // var imageElement2 = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
                 
-                // Append the image to the image container
-                $('#image-container-2').empty();
-                $('#image-container-2').append(imageElement);
-                $('#image-container-2').append(imageElement2);
-                // You can display the result or take further actions here
+                // // Append the image to the image container
+                // $('#image-container-2').empty();
+                // $('#image-container-2').append(imageElement);
+                // $('#image-container-2').append(imageElement2);
+                // // You can display the result or take further actions here
+                updateCalculatePrice2Result(response["client_key"]);
             },
             error: function(error) {
                 console.error('Error calculating price:', error.statusText);

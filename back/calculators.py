@@ -198,20 +198,15 @@ us_risk_prem = {
     "2022": 0.056,
     "2023": 0.057,
 }
-# async def numbers(minimum, maximum):
-#     for i in range(minimum, maximum + 1):
-#         await asyncio.sleep(0.9)
-#         yield dict(data=i)
-def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
+def calculate_garch(strike_prices: [], expire_dates: [], current_date, r, ticker = ""):
     # expire_date = "2022-12-16"
-    if type(expire_date) is str:
-        expire_date = datetime.strptime(expire_date, "%Y-%m-%d").date()
+    for i in range(0, len(expire_dates)):
+        if type(expire_dates[i]) is str:
+            expire_dates[i] = datetime.strptime(expire_dates[i], "%Y-%m-%d").date()
     if type(current_date) is str:
         current_date = datetime.strptime(current_date, "%Y-%m-%d").date()
     if ticker == "SPX" or ticker == "":
         ticker = "^SPX"
-    dte = (expire_date - current_date).days
-    T = dte / 365
 
     # get historical data of spx
     end_date = current_date
@@ -223,8 +218,6 @@ def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     df_return = df_close.pct_change().dropna()
 
     # init and fit model
-    # model = arch.arch_model(df_return, vol="GARCH", p=1, q=1, rescale=False)
-    # results = model.fit(disp="off")
     daily_r = r / 360 # the input param is risk free rate in a year
     lbd = us_risk_prem[str(current_date.year)]  # _todo pls update this
     model = garch_1_1(df_return.to_numpy(), daily_r, lbd)
@@ -234,33 +227,36 @@ def calculate_garch(strike_price, expire_date, current_date, r, ticker = ""):
     omega = model.params[0]
     alpha = model.params[1]
     beta = model.params[2]
-    # omega = results.params["omega"]
-    # alpha = results.params["alpha[1]"]
-    # beta = results.params["beta[1]"]
-    # v = results.conditional_volatility
-    # conditional_var = v**2
-    # H0 = conditional_var.iloc[-1] / 100
     H0 = variance(df_return)
 
     # monte carlo simulation
-    steps = dte
-    num_simulations = 1000
-    Z = np.random.normal(size=(steps + 1, num_simulations))
-    H = np.empty(shape=(steps, num_simulations))
-    H = np.concatenate((np.full(shape=(1, num_simulations), fill_value=H0), H))
-    lnS = np.empty(shape=(steps, num_simulations))
-    lnS = np.concatenate(
-        (np.full(shape=(1, num_simulations), fill_value=np.log(df_close.iloc[-1])), lnS)
-    )
-    for i in range(1, steps + 1):
-        # _todo this formula could be improved
-        H[i] = omega + (alpha * (Z[i - 1] - lbd) ** 2 + beta) * H[i - 1]
-        lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
+    option_prices = []
+    assert ((len(strike_prices) == 1 and len(expire_dates) == 1) # single option
+        or (len(strike_prices) == 1 and len(expire_dates) > 1) # multiple options
+        or (len(strike_prices) > 1 and len(expire_dates) == 1)) # multiple options
+    for strike_price in strike_prices:
+        for expire_date in expire_dates:
+            dte = (expire_date - current_date).days
+            T = dte / 365
+            steps = dte
+            num_simulations = 1000
+            Z = np.random.normal(size=(steps + 1, num_simulations))
+            H = np.empty(shape=(steps, num_simulations))
+            H = np.concatenate((np.full(shape=(1, num_simulations), fill_value=H0), H))
+            lnS = np.empty(shape=(steps, num_simulations))
+            lnS = np.concatenate(
+                (np.full(shape=(1, num_simulations), fill_value=np.log(df_close.iloc[-1])), lnS)
+            )
+            for i in range(1, steps + 1):
+                # _todo this formula could be improved
+                H[i] = omega + (alpha * (Z[i - 1] - lbd) ** 2 + beta) * H[i - 1]
+                lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
 
-    paths = np.exp(lnS)
-    payoffs = np.maximum(paths[-1] - strike_price, 0)
-    option_price = np.mean(payoffs) * np.exp(-r * T)  # discounting back to present value
-    return option_price
+            paths = np.exp(lnS)
+            payoffs = np.maximum(paths[-1] - strike_price, 0)
+            option_price = np.mean(payoffs) * np.exp(-r * T)  # discounting back to present value
+            option_prices.append(option_price)
+    return option_prices
 
 '''
 The following function call to ivolatility.com and extract the option price from

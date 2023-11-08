@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import FastAPI, Request, Depends, Response
+from fastapi import FastAPI, Request, Depends, Response, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -19,9 +19,12 @@ import numpy as np
 import math
 import uvicorn
 import os
+from back.jobs import calculate_prices_job
+from back.utils import get_random_string
+from back.cache import pricing
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -135,7 +138,7 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
         r = get_r(req.selectedDate)
         v = get_volatility_ticker(req.ticker, selectedDate)
         spot = get_spot_ticker(req.ticker, selectedDate)
-        garch_price = calculate_garch(strike, expireDate, selectedDate, r, req.ticker)
+        garch_price = calculate_garch([strike], [expireDate], selectedDate, r, req.ticker)[0]
     else:
         r = req.r
         v = req.v
@@ -171,128 +174,56 @@ class CalPriceRequest2(BaseModel):
     strike: int
     expireDate: str
 @app.post("/calculate-price-2")
-async def calculate_prices(req: CalPriceRequest2, db: Session = Depends(get_db)):
-    # response = Response(content_type="text/event-stream")
-    # response.headers["Cache-Control"] = "no-cache"
-    # response.headers["Connection"] = "keep-alive"
+async def calculate_prices(req: CalPriceRequest2, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)):
 
     ticker = req.ticker
     strike = req.strike
-    selectedDate = req.selectedDate
-    expireDate = req.expireDate
+    selected_date = req.selectedDate
+    expire_date = req.expireDate
 
-    spot = get_spot(selectedDate)
-    r = get_r(selectedDate)
-    vol = get_volatility(selectedDate)
-    prices_bs = []
-    prices_mc = []
-    prices_garch = []
-    prices_bs_ivolatility = []
-    market_prices = []
-    strike_prices = []
-    expire_dates = []
-    if expireDate != "":
-        query = (
-            select(Option2019)
-            .where(Option2019.underlying == ticker)
-            .where(Option2019.quotedate == selectedDate)
-            .where(Option2019.expiration == expireDate)
-            .where(Option2019.volume > 0)
-            .where(Option2019.type == "call")
-            .order_by(Option2019.strike)
-        )
-        data = db.execute(query)
-        data = data.scalars().all()
-        market_prices = [opt.last for opt in data]
-        strike_prices = [int(opt.strike) for opt in data]
-        expireDate = datetime.strptime(expireDate, "%Y-%m-%d").date()
-        for strike_price in strike_prices:
-            prices_bs.append(calculate_bs_2(spot, strike_price, expireDate, selectedDate, r, vol))
-            prices_mc.append(calculate_mc_2(spot, strike_price, expireDate, selectedDate, r, vol))
-            prices_garch.append(calculate_garch(strike_price, expireDate, selectedDate, r))
-            bs_ivo, _ = get_d_oprice_values(spot, strike_price, expireDate, selectedDate, r, vol)
-            prices_bs_ivolatility.append(bs_ivo)
+    key_length = 10
+    client_key = get_random_string(key_length)
 
-    else:
-        query = (
-            select(Option2019)
-            .where(Option2019.underlying == ticker)
-            .where(Option2019.quotedate == selectedDate)
-            .where(Option2019.strike == strike)
-            .where(Option2019.volume > 0)
-            .where(Option2019.type == "call")
-            .order_by(Option2019.expiration)
-        )
-        data = db.execute(query)
-        data = data.scalars().all()
-        market_prices = [opt.last for opt in data]
-        expire_dates = [opt.expiration for opt in data]
-        for expire_date in expire_dates:
-            prices_bs.append(calculate_bs_2(spot, strike, expire_date, selectedDate, r, vol))
-            prices_mc.append(calculate_mc_2(spot, strike, expire_date, selectedDate, r, vol))
-            prices_garch.append(calculate_garch(strike, expire_date, selectedDate, r))
-            bs_ivo, _ = get_d_oprice_values(spot, strike, expire_date, selectedDate, r, vol)
-            prices_bs_ivolatility.append(bs_ivo)
+    # init value in cache
+    await pricing.set(client_key, {
+            "is_done": False,
+            "img1": "",         # Location of result img 1
+            "img2": "",         # Location of result img 1
+            "mk": [],           # Market prices
+            "bs": [],           # Black Scholes
+            "mc": [],           # Monte Carlo
+            "bs_ivo": [],       # Black Scholes from IVolatility.com
+            "garch": [],        # GARCH(1,1)
+            "gp": []            # Gaussian Process
+    })
+    background_tasks.add_task(calculate_prices_job, client_key, ticker, strike, 
+                              selected_date, expire_date, db)
     
-    # plot and save to image
-    plt.clf()
-    plt.ylabel('Prices')
-    plt.title('Comparison of Prices')
-    if len(strike_prices) > 0:
-        plt.xlabel('Strike Prices')
-        plt.plot(strike_prices, market_prices, "-ro", label="Market prices", markersize=2)
-        plt.plot(strike_prices, prices_bs, "-go", label="Black-Scholes prices", markersize=2)
-        plt.plot(strike_prices, prices_mc, "-bo", label="Monte Carlo prices", markersize=2)
-        plt.plot(strike_prices, prices_garch, "-yo", label="GARCH prices", markersize=2)
-        plt.plot(strike_prices, prices_bs_ivolatility, "-mo", label="IVolatility prices", markersize=2)
+    return {"client_key": client_key}
+
+@app.get("/calculate-price-2")
+async def get_calculate_prices(client_key):
+
+    price = await pricing.get(client_key)
+    if price["is_done"]:
+        # pricing.delete(client_key)
+        return {
+            "is_done": price["is_done"],
+            "img1": price["img1"],
+            "img2": price["img2"],
+        }
     else:
-        plt.xlabel('Expire Date')
-        plt.xticks(rotation=90)
-        plt.plot(expire_dates, market_prices, "-ro", label="Market prices")
-        plt.plot(expire_dates, prices_bs, "-go", label="Black-Scholes prices")
-        plt.plot(expire_dates, prices_mc, "-bo", label="Monte Carlo prices")
-        plt.plot(expire_dates, prices_garch, "-yo", label="GARCH prices")
-        plt.plot(expire_dates, prices_bs_ivolatility, "-mo", label="IVolatility prices")
-
-    plt.legend()
-
-    # Show the plot
-    img1_path = "static/foo.png"
-    plt.savefig(img1_path)
-
-    plt.clf()
-    plt.ylabel('Points')
-    plt.title('Comparison of MdAPE points')
-    prices_mc = np.array(prices_mc)
-    prices_bs = np.array(prices_bs)
-    prices_garch = np.array(prices_garch)
-    prices_bs_ivolatility = np.array(prices_bs_ivolatility)
-    market_prices = np.array([float(p) for p in market_prices])
-    mc_mdape = np.abs((prices_mc-market_prices)/market_prices)
-    bs_mdape = np.abs((prices_bs-market_prices)/market_prices)
-    garch_mdape = np.abs((prices_garch-market_prices)/market_prices)
-    ivolatility_mdape = np.abs((prices_bs_ivolatility-market_prices)/market_prices)
-    if len(strike_prices) > 0:
-        plt.xlabel('Strike Prices')
-        plt.plot(strike_prices, bs_mdape, "-go", label="Black-Scholes MdAPE", markersize=2)
-        plt.plot(strike_prices, mc_mdape, "-bo", label="Monte Carlo MdAPE", markersize=2)
-        plt.plot(strike_prices, garch_mdape, "-yo", label="GARCH MdAPE", markersize=2)
-        plt.plot(strike_prices, ivolatility_mdape, "-mo", label="IVolatility MdAPE", markersize=2)
-    else:
-        plt.xlabel('Expire Date')
-        plt.xticks(rotation=90)
-        plt.plot(expire_dates, bs_mdape, "-go", label="Black-Scholes MdAPE")
-        plt.plot(expire_dates, mc_mdape, "-bo", label="Monte Carlo MdAPE")
-        plt.plot(expire_dates, garch_mdape, "-yo", label="GARCH MdAPE")
-        plt.plot(expire_dates, ivolatility_mdape, "-mo", label="IVolatility MdAPE")
-
-    plt.legend()
-    # Show the plot
-    img2_path = "static/bar.png"
-    plt.savefig(img2_path)
-
-    return 1
-
+        return {
+            "is_done": price["is_done"],
+            "total": len(price["mk"]),
+            "count_bs": len(price["bs"]),
+            "count_mc": len(price["mc"]),
+            "count_bs_ivo": len(price["bs_ivo"]),
+            "count_garch": len(price["garch"]),
+        }
+    
 
 @app.on_event("startup")
 async def startup_db():
@@ -301,6 +232,10 @@ async def startup_db():
 @app.on_event("shutdown")
 async def shutdown_db():
     await database.disconnect()
+
+@app.on_event("shutdown")
+async def clear_cache():
+    pricing.close()
 
 if __name__ == "__main__":
     

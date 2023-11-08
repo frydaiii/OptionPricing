@@ -3,6 +3,8 @@ import yfinance as yf
 import numpy as np
 import math
 import pandas as pd
+import string
+import random
 
 def get_data(start_date, end_date, ticker="^SPX"):
     # if type(start_date) is str:
@@ -84,3 +86,9 @@ def get_spot_ticker(ticker, date):
 
 def get_spot(date):
     return get_spot_ticker("SPX", date)
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
