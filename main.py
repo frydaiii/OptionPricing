@@ -162,7 +162,7 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
         "bs_price": bs_price,
         "mc_price": mc_price
     }
-    if garch_price != 0:
+    if req.ticker != "":
         res["garch_price"] = garch_price
     if market_price != 0:
         res["market_price"] = market_price
@@ -196,7 +196,8 @@ async def calculate_prices(req: CalPriceRequest2,
             "mc": [],           # Monte Carlo
             "bs_ivo": [],       # Black Scholes from IVolatility.com
             "garch": [],        # GARCH(1,1)
-            "gp": []            # Gaussian Process
+            "gp": [],           # Gaussian Process
+            "gp_status": ""
     })
     background_tasks.add_task(calculate_prices_job, client_key, ticker, strike, 
                               selected_date, expire_date, db)
@@ -208,6 +209,7 @@ async def get_calculate_prices(client_key):
 
     price = await pricing.get(client_key)
     if price["is_done"]:
+    # if len(price["gp"]) == len(price["mk"]):
         # pricing.delete(client_key)
         return {
             "is_done": price["is_done"],
@@ -215,6 +217,8 @@ async def get_calculate_prices(client_key):
             "img2": price["img2"],
         }
     else:
+        gp_status = price["gp_status"] if len(price["gp"]) <= 0 else len(price["gp"])
+
         return {
             "is_done": price["is_done"],
             "total": len(price["mk"]),
@@ -222,6 +226,7 @@ async def get_calculate_prices(client_key):
             "count_mc": len(price["mc"]),
             "count_bs_ivo": len(price["bs_ivo"]),
             "count_garch": len(price["garch"]),
+            "count_gp": gp_status,
         }
     
 

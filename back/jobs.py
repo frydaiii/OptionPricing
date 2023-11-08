@@ -10,6 +10,7 @@ from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
 import numpy as np
 from back.cache import pricing
 from back.plot import save_img
+from back.gaussian.process import calculate_gp
 
 async def calculate_prices_job(client_key: str,
     ticker: str, 
@@ -44,6 +45,7 @@ async def calculate_prices_job(client_key: str,
         strike_prices = [int(opt.strike) for opt in data]
         expire_date = datetime.strptime(expire_date, "%Y-%m-%d").date()
         price["garch"] = calculate_garch(strike_prices, [expire_date], selected_date, r)
+        await calculate_gp(client_key, strike_prices, [expire_date], selected_date, ticker)
         for strike_price in strike_prices:
             price["bs"].append(
                 calculate_bs_2(spot, strike_price, expire_date, selected_date, r, vol))
@@ -62,6 +64,7 @@ async def calculate_prices_job(client_key: str,
         price["mk"] = [opt.last for opt in data]
         expire_dates = [opt.expiration for opt in data]
         price["garch"] = calculate_garch([strike], expire_dates, selected_date, r)
+        await calculate_gp(client_key, [strike], expire_dates, selected_date, ticker)
         for expire_date in expire_dates:
             price["bs"].append(
                 calculate_bs_2(spot, strike, expire_date, selected_date, r, vol))
@@ -72,14 +75,17 @@ async def calculate_prices_job(client_key: str,
             await pricing.set(client_key, price) # update cache
     
     # plot and save to image
+    price = await pricing.get(client_key)
     prices_bs = price["bs"]
     prices_mc = price["mc"]
     prices_garch = price["garch"]
     prices_bs_ivolatility = price["bs_ivo"]
+    prices_gp = price["gp"]
     market_prices = price["mk"]
 
     price["img1"], price["img2"] = save_img(client_key, prices_bs, prices_mc, 
                                             prices_garch, prices_bs_ivolatility, 
+                                            prices_gp,
                                             market_prices, strike_prices, expire_dates)
     price["is_done"] = True
     await pricing.set(client_key, price) # udpate cache

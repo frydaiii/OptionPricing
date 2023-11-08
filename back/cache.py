@@ -1,5 +1,5 @@
 from aiocache import Cache
-pricing = Cache(Cache.MEMORY)
+pricing = Cache(Cache.MEMORY) # prices to return to client
 
 # pricing = dict()
 
@@ -14,7 +14,8 @@ pricing = {
         "mc": [],           # Monte Carlo
         "bs_ivo": [],       # Black Scholes from IVolatility.com
         "garch": [],        # GARCH(1,1)
-        "gp": []            # Gaussian Process
+        "gp": [],           # Gaussian Process
+        "gp_status"
     }
 }
 """

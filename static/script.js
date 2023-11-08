@@ -147,7 +147,7 @@ $(document).ready(function() {
 
     async function updateCalculatePrice2Result(client_key) {
         var still_update = true;
-        var limit = 100;
+        var limit = 200;
         var count = 0;
         while (still_update && ++count < limit) {
             await sleep(2000);
@@ -182,10 +182,13 @@ $(document).ready(function() {
                         garch.appendChild(document.createTextNode("GARCH pricing:" + response["count_garch"] + "/" + response["total"]));
                         const bs_ivo = (document.createElement('li'))
                         bs_ivo.appendChild(document.createTextNode("IVolatility pricing:" + response["count_bs_ivo"] + "/" + response["total"]));
+                        const gp = (document.createElement('li'))
+                        gp.appendChild(document.createTextNode("Gaussian pricing:" + response["count_gp"] + "/" + response["total"]));
                         para.appendChild(bs);
                         para.appendChild(mc);
                         para.appendChild(garch);
                         para.appendChild(bs_ivo);
+                        para.appendChild(gp);
                         $('#image-container-2').empty();
                         $('#image-container-2').append(para);
                     }
