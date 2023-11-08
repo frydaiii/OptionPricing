@@ -18,7 +18,7 @@ import uvicorn
 from back.cache import pricing
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)

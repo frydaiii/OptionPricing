@@ -42,9 +42,9 @@ def handle_calculate_prices(db: Session, strike, current_date, expire_date, tick
         expire_dates = [opt.expiration for opt in data]
         strike_prices = [strike]
 
-    gp_task = gp.calculate.delay(ticker, strike_prices, expire_dates, current_date)
-    garch_task = garch.calculate.delay(ticker, strike_prices, expire_dates, current_date)
-    mc_task = mc.calculate.delay(ticker, strike_prices, expire_dates, current_date)
+    gp_task = gp.calculate.delay(strike_prices, expire_dates, current_date, ticker)
+    garch_task = garch.calculate.delay(strike_prices, expire_dates, current_date, ticker)
+    mc_task = mc.calculate.delay(strike_prices, expire_dates, current_date, ticker)
     return {
         "gp_id": gp_task.id,
         "garch_id": garch_task.id,

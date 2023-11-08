@@ -7,6 +7,7 @@ import numpy as np
 from back.utils import *
 from back.garch import garch_1_1
 from statistics import variance
+import json
 
 # US average market risk premium
 # https://www.statista.com/statistics/664840/average-market-risk-premium-usa/
@@ -26,7 +27,7 @@ us_risk_prem = {
     "2023": 0.057,
 }
 
-@app.task
+@app.task(bind=True)
 # def calculate(self, strike_prices: [], expire_dates: [], current_date, r, ticker = ""):
 def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = ""):
     # expire_date = "2022-12-16"
@@ -35,7 +36,7 @@ def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = 
             expire_dates[i] = datetime.strptime(expire_dates[i], "%Y-%m-%d").date()
     if type(current_date) is str:
         current_date = datetime.strptime(current_date, "%Y-%m-%d").date()
-    if ticker == "SPX" or ticker == "":
+    if ticker == "SPX" or ticker == "" or ticker == "SPXW":
         ticker = "^SPX"
 
     # get historical data of spx
@@ -90,5 +91,5 @@ def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = 
             option_prices.append(option_price)
             self.update_state(state="CALCULATING", meta={"current": len(option_prices), 
                                                          "total": len(strike_prices)*len(expire_dates)})
-    rd.set(self.id, option_prices)
+    rd.set(self.request.id, json.dumps(option_prices))
     return 

@@ -3,6 +3,7 @@ from back.gaussian.process import gen_data, train, option_pricing
 from datetime import datetime
 from back.utils import *
 from worker.main import rd
+import json
 
 @app.task(bind=True)
 def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = "^SPX"):
@@ -21,7 +22,7 @@ def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = 
     # prepare data
     start_date = current_date - timedelta(days=5*365)
     end_date = current_date
-    X, Y, N = gen_data(start_date, end_date)
+    X, Y, N = gen_data(start_date, end_date, ticker)
     spot = get_spot(end_date)
     r = get_r(end_date)
 
@@ -34,5 +35,5 @@ def calculate(self, strike_prices: [], expire_dates: [], current_date, ticker = 
                                          strike_price, expire_date, current_date, r))
             self.update_state(state="CALCULATING", meta={"current": len(option_prices), 
                                                          "total": len(strike_prices)*len(expire_dates)})
-    rd.set(self.id, option_prices)
+    rd.set(self.request.id, json.dumps(option_prices))
     return

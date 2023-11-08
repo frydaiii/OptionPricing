@@ -46,8 +46,8 @@ from celery import Task
             
 #     return
 
-def gen_data(start_date, end_date):
-    df_close, r = get_close_price_r(start_date, end_date)
+def gen_data(start_date, end_date, ticker):
+    df_close, r = get_close_price_r(start_date, end_date, ticker)
     daily_r = r/360
     Y = tf.convert_to_tensor(2*daily_r-2*df_close.pct_change().dropna().to_numpy())
     N = len(Y)

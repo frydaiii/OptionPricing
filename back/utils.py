@@ -42,7 +42,7 @@ def get_volatility_ticker(ticker, date):
     if type(date) is str:
         date = datetime.strptime(date, "%Y-%m-%d")
     # filter
-    if ticker == "SPX":
+    if ticker == "SPX" or ticker == "SPXW":
         ticker = "^SPX"
     # create train data is data 10 years before current_date
     end_date = date
@@ -69,7 +69,7 @@ def get_volatility(date):
 def get_spot_ticker(ticker, date):
     if type(date) is str:
         date = datetime.strptime(date, "%Y-%m-%d")
-    if ticker == "SPX":
+    if ticker == "SPX" or ticker == "SPXW":
         ticker = "^SPX"
     end_date = date
     start_date = end_date - timedelta(days=5)
