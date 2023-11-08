@@ -13,14 +13,8 @@ from back.models import Option2019
 from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
         get_volatility, get_volatility_ticker, get_spot_ticker, \
             get_d_oprice_values, calculate_garch
-import yfinance as yf
-import QuantLib as ql
-import numpy as np
-import math
+from handle.calculate_prices import handle_calculate_prices
 import uvicorn
-import os
-from back.jobs import calculate_prices_job
-from back.utils import get_random_string
 from back.cache import pricing
 
 # Define database URL
@@ -183,26 +177,7 @@ async def calculate_prices(req: CalPriceRequest2,
     selected_date = req.selectedDate
     expire_date = req.expireDate
 
-    key_length = 10
-    client_key = get_random_string(key_length)
-
-    # init value in cache
-    await pricing.set(client_key, {
-            "is_done": False,
-            "img1": "",         # Location of result img 1
-            "img2": "",         # Location of result img 1
-            "mk": [],           # Market prices
-            "bs": [],           # Black Scholes
-            "mc": [],           # Monte Carlo
-            "bs_ivo": [],       # Black Scholes from IVolatility.com
-            "garch": [],        # GARCH(1,1)
-            "gp": [],           # Gaussian Process
-            "gp_status": ""
-    })
-    background_tasks.add_task(calculate_prices_job, client_key, ticker, strike, 
-                              selected_date, expire_date, db)
-    
-    return {"client_key": client_key}
+    return handle_calculate_prices(db, strike, selected_date, expire_date, ticker)
 
 @app.get("/calculate-price-2")
 async def get_calculate_prices(client_key):

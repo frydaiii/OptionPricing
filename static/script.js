@@ -147,7 +147,7 @@ $(document).ready(function() {
 
     async function updateCalculatePrice2Result(client_key) {
         var still_update = true;
-        var limit = 200;
+        var limit = 20;
         var count = 0;
         while (still_update && ++count < limit) {
             await sleep(2000);

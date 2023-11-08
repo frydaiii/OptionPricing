@@ -92,3 +92,9 @@ def get_random_string(length):
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for i in range(length))
     return result_str
+
+def get_close_price_r(start_date, end_date, ticker):
+    stock_data = get_data(start_date, end_date, ticker)
+    df_close = stock_data["Close"]
+    r = get_r(end_date)
+    return (df_close, r)

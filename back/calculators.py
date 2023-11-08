@@ -198,6 +198,7 @@ us_risk_prem = {
     "2022": 0.056,
     "2023": 0.057,
 }
+# todo remove this
 def calculate_garch(strike_prices: [], expire_dates: [], current_date, r, ticker = ""):
     # expire_date = "2022-12-16"
     for i in range(0, len(expire_dates)):
