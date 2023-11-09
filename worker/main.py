@@ -8,4 +8,5 @@ app = Celery(__name__, broker=redis_url, backend=redis_url, include=[
     'worker.garch',
     'worker.gp',
     'worker.mc',
+    'worker.bs_ivo',
 ])

@@ -112,16 +112,6 @@ $(document).ready(function() {
             contentType: 'application/json',
             data: JSON.stringify(requestData),
             success: function(response) {
-                // Handle the response from the calculation API
-                // console.log('Calculation result:', response);
-                // Create an image element and set its src attribute
-                // var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
-                
-                // // Append the image to the image container
-                // $('#image-container').empty();
-                // $('#image-container').append(imageElement);
-                // You can display the result or take further actions here
-                        // Display the response in a bullet list
                 var resultList = $("#result-prices");
                 resultList.empty(); // Clear previous results
 
@@ -129,11 +119,6 @@ $(document).ready(function() {
                     var listItem = $("<li>").text(key + ": " + value);
                     resultList.append(listItem);
                 });
-
-                // // Scroll to the results
-                // $('html, body').animate({
-                //     scrollTop: $("#results").offset().top
-                // }, 500);
             },
             error: function(error) {
                 console.error('Error calculating price:', error.statusText);
@@ -145,23 +130,45 @@ $(document).ready(function() {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function updateCalculatePrice2Result(client_key) {
+    function createNestedList(data) {
+        const list = document.createElement('ul');
+
+        for (let key in data) {
+          const listItem = document.createElement('li');
+          listItem.textContent = key;
+      
+          if (typeof data[key] === 'object' && data[key] !== null) {
+            const nestedList = createNestedList(data[key]);
+            listItem.appendChild(nestedList);
+          } else {
+            const itemValue = document.createElement('span');
+            itemValue.textContent = " " + JSON.stringify(data[key]);
+            listItem.appendChild(itemValue);
+          }
+      
+          list.appendChild(listItem);
+        }
+      
+        return list;
+      }
+
+    async function updateCalculatePrice2Result(calResponse) {
         var still_update = true;
-        var limit = 20;
+        var limit = 200;
         var count = 0;
         while (still_update && ++count < limit) {
             await sleep(2000);
 
             $.ajax({
-                url: '/calculate-price-2',
-                method: 'GET',
+                url: '/calculate-price-2-status',
+                method: 'POST',
                 dataType: 'json',
                 contentType: 'application/json',
-                data: "client_key="+client_key,
+                data: JSON.stringify(calResponse),
                 success: function(response) {
                     // Handle the response from the calculation API
                     console.log('Calculation result:', response);
-                    if (response["is_done"]) {
+                    if (response["success"]) {
 
                         // Create an image element and set its src attribute
                         var imageElement = $('<img>').attr('src', response["img1"] + '?t=' + new Date().getTime());
@@ -173,24 +180,34 @@ $(document).ready(function() {
                         $('#image-container-2').append(imageElement2);
                         still_update = false;
                     } else {
-                        const para = document.createElement("ul");
-                        const bs = (document.createElement('li'))
-                        bs.appendChild(document.createTextNode("Black Scholes pricing:" + response["count_bs"] + "/" + response["total"]));
-                        const mc = (document.createElement('li'))
-                        mc.appendChild(document.createTextNode("Monte Carlo pricing:" + response["count_mc"] + "/" + response["total"]));
-                        const garch = (document.createElement('li'))
-                        garch.appendChild(document.createTextNode("GARCH pricing:" + response["count_garch"] + "/" + response["total"]));
-                        const bs_ivo = (document.createElement('li'))
-                        bs_ivo.appendChild(document.createTextNode("IVolatility pricing:" + response["count_bs_ivo"] + "/" + response["total"]));
-                        const gp = (document.createElement('li'))
-                        gp.appendChild(document.createTextNode("Gaussian pricing:" + response["count_gp"] + "/" + response["total"]));
-                        para.appendChild(bs);
-                        para.appendChild(mc);
-                        para.appendChild(garch);
-                        para.appendChild(bs_ivo);
-                        para.appendChild(gp);
+                        // const para = document.createElement("ul");
+                        // const mc = (document.createElement('li'))
+                        // mc.appendChild(document.createTextNode("Monte Carlo:" + response["mc"]["state"]));
+                        
+                        // const garch = (document.createElement('li'))
+                        // garch.appendChild(document.createTextNode("GARCH"));
+                        // const garch_ = document.createElement("ul");
+                        // const garch_state = document.createElement('li')
+                        // const garch_info = document.createElement('li')
+                        // garch_state.appendChild(document.createTextNode(response["garch"]["state"]));
+                        // garch_info.appendChild(document.createTextNode(response["garch"]["info"]));
+                        
+                        // const bs_ivo = (document.createElement('li'))
+                        // bs_ivo.appendChild(document.createTextNode("IVolatility:" + response["bs_ivo"]["state"]));
+                        
+                        // const gp = (document.createElement('li'))
+                        // const gp_state = document.createElement('li')
+                        // const gp_info = document.createElement('li')
+                        // gp.appendChild(document.createTextNode("Gaussian Process"));
+                        // gp_state.appendChild(document.createTextNode(response["gp"]["state"]));
+                        // gp_info.appendChild(document.createTextNode(response["gp"]["info"]));
+                        
+                        // para.appendChild(mc);
+                        // para.appendChild(garch);
+                        // para.appendChild(bs_ivo);
+                        // para.appendChild(gp);
                         $('#image-container-2').empty();
-                        $('#image-container-2').append(para);
+                        $('#image-container-2').append(createNestedList(response));
                     }
                 },
                 error: function(error) {
@@ -217,16 +234,7 @@ $(document).ready(function() {
             success: function(response) {
                 // Handle the response from the calculation API
                 console.log('Calculation result:', response);
-                // // Create an image element and set its src attribute
-                // var imageElement = $('<img>').attr('src', 'static/foo.png?t=' + new Date().getTime());
-                // var imageElement2 = $('<img>').attr('src', 'static/bar.png?t=' + new Date().getTime());
-                
-                // // Append the image to the image container
-                // $('#image-container-2').empty();
-                // $('#image-container-2').append(imageElement);
-                // $('#image-container-2').append(imageElement2);
-                // // You can display the result or take further actions here
-                updateCalculatePrice2Result(response["client_key"]);
+                updateCalculatePrice2Result(response);
             },
             error: function(error) {
                 console.error('Error calculating price:', error.statusText);

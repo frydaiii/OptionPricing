@@ -14,11 +14,13 @@ from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
         get_volatility, get_volatility_ticker, get_spot_ticker, \
             get_d_oprice_values, calculate_garch
 from handle.calculate_prices import handle_calculate_prices
+from handle.calculate_prices_status import handle_calculate_prices_status
 import uvicorn
 from back.cache import pricing
+from worker.main import rd
 
 # Define database URL
-DATABASE_URL = "mysql+pymysql://root:1@localhost:3306/option_chains"
+DATABASE_URL = "mysql+pymysql://manh:1@localhost:3306/option_chains"
 
 # Create a database instance
 database = Database(DATABASE_URL)
@@ -169,7 +171,6 @@ class CalPriceRequest2(BaseModel):
     expireDate: str
 @app.post("/calculate-price-2")
 async def calculate_prices(req: CalPriceRequest2, 
-    background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)):
 
     ticker = req.ticker
@@ -179,30 +180,21 @@ async def calculate_prices(req: CalPriceRequest2,
 
     return handle_calculate_prices(db, strike, selected_date, expire_date, ticker)
 
-@app.get("/calculate-price-2")
-async def get_calculate_prices(client_key):
+class CalPriceRequest2Status(BaseModel):
+    gp_id: str
+    garch_id: str
+    mc_id: str
+    bs_ivo_id: str
+    market_id: str
+@app.post("/calculate-price-2-status")
+async def get_calculate_prices_status(req: CalPriceRequest2Status):
+    gp_id = req.gp_id
+    garch_id = req.garch_id
+    mc_id = req.mc_id
+    bs_ivo_id = req.bs_ivo_id
+    market_id = req.market_id
 
-    price = await pricing.get(client_key)
-    if price["is_done"]:
-    # if len(price["gp"]) == len(price["mk"]):
-        # pricing.delete(client_key)
-        return {
-            "is_done": price["is_done"],
-            "img1": price["img1"],
-            "img2": price["img2"],
-        }
-    else:
-        gp_status = price["gp_status"] if len(price["gp"]) <= 0 else len(price["gp"])
-
-        return {
-            "is_done": price["is_done"],
-            "total": len(price["mk"]),
-            "count_bs": len(price["bs"]),
-            "count_mc": len(price["mc"]),
-            "count_bs_ivo": len(price["bs_ivo"]),
-            "count_garch": len(price["garch"]),
-            "count_gp": gp_status,
-        }
+    return handle_calculate_prices_status(gp_id, garch_id, mc_id, bs_ivo_id, market_id)
     
 
 @app.on_event("startup")
