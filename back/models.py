@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 # _todo remove this
 class OptionData(Base):
   __tablename__ = "options_data"
@@ -41,6 +42,7 @@ class OptionData(Base):
   p_volume = Column(Integer)
   strike_distance = Column(DECIMAL(10, 2))
   strike_distance_pct = Column(DECIMAL(10, 2))
+
 
 class Option2019(Base):
   __tablename__ = 'options_2019'

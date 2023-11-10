@@ -1,8 +1,10 @@
 import tensorflow as tf
 import gpflow
 
+
 class OptiomizerMixin(object):
-  def RunAdam(self, iterations: int, train_iter): # _todo update type hint
+
+  def RunAdam(self, iterations: int, train_iter):  # _todo update type hint
     """
     :param model: GPflow model
     :param iterations: number of iterations
@@ -22,12 +24,15 @@ class OptiomizerMixin(object):
       if step % 1000 == 0:
         elbo = -training_loss().numpy()
         # print(step, elbo)
-        self.task.update_state(state='TRAINING Adam', 
-                                meta={"current": step, "total": iterations})
+        self.task.update_state(state='TRAINING Adam',
+                               meta={
+                                   "current": step,
+                                   "total": iterations
+                               })
         logf.append(elbo)
     return logf
 
-  def RunNatGrad(self, iterations: int, train_iter): # _todo update type hint
+  def RunNatGrad(self, iterations: int, train_iter):  # _todo update type hint
     """
     :param model: GPflow model
     :param iterations: number of iterations
@@ -47,7 +52,10 @@ class OptiomizerMixin(object):
       if step % 1000 == 0:
         elbo = -training_loss().numpy()
         # print(step, elbo)
-        self.task.update_state(state='TRAINING NatGrad', 
-                                meta={"current": step, "total": iterations})
+        self.task.update_state(state='TRAINING NatGrad',
+                               meta={
+                                   "current": step,
+                                   "total": iterations
+                               })
         logf.append(elbo)
     return logf
