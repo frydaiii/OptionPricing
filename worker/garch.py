@@ -5,7 +5,6 @@ from worker.main import rd
 from datetime import timedelta, datetime
 import numpy as np
 from back.utils import *
-from back.garch.main import garch_1_1
 from statistics import variance
 import json
 from back.garch.main import GARCH

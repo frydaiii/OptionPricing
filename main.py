@@ -10,9 +10,11 @@ from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from typing import Optional
 from back.models import Option2019
-from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
-        get_volatility, get_volatility_ticker, get_spot_ticker, \
-            get_d_oprice_values, calculate_garch
+# from back.calculators import calculate_bs_2, calculate_mc_2, get_r, get_spot, \
+#         get_volatility, get_volatility_ticker, get_spot_ticker, \
+#             get_d_oprice_values, calculate_garch
+from back import black_scholes
+from back.utils import get_r, get_volatility_ticker, get_spot_ticker
 from handle.calculate_prices import handle_calculate_prices
 from handle.calculate_prices_status import handle_calculate_prices_status
 import uvicorn
@@ -65,7 +67,7 @@ class ListOptionsReq(BaseModel):
   page: int
   perPage: int
 # POST request to /list-options
-@app.post("/list-options")
+@app.post("/list-options") # _todo remove this api
 async def list_options(option_request: ListOptionsReq, db: Session = Depends(get_db)):
   # _todo move to separate function
   # print(ticker_symbol, date, perPage,page)
@@ -114,70 +116,72 @@ async def list_options(option_request: ListOptionsReq, db: Session = Depends(get
 # calculate price request model
 class CalPriceRequest(BaseModel):
   ticker: str
-  selectedDate: str
+  selectedDate: str # _todo change to camelcase
   spot: int
   strike: int
-  expireDate: str
+  expireDate: str # _todo change to camelcase
   r: float
   v: float
 @app.post("/calculate-price")
 async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
   # _todo move to separate function
-  strike = req.strike
-  selectedDate = datetime.strptime(req.selectedDate, "%Y-%m-%d").date()
-  expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d").date()
+  # strike = req.strike
+  # selectedDate = datetime.strptime(req.selectedDate, "%Y-%m-%d").date()
+  # expireDate = datetime.strptime(req.expireDate, "%Y-%m-%d").date()
 
-  r = 0
-  v = 0
-  spot = 0
-  garch_price = 0
-  if req.ticker != "":
-    r = get_r(req.selectedDate)
-    v = get_volatility_ticker(req.ticker, selectedDate)
-    spot = get_spot_ticker(req.ticker, selectedDate)
-    garch_price = calculate_garch([strike], [expireDate], selectedDate, r, req.ticker)[0]
-  else:
-    r = req.r
-    v = req.v
-    spot = req.spot
+  # r = 0
+  # v = 0
+  # spot = 0
+  # garch_price = 0
+  # if req.ticker != "":
+  #   r = get_r(req.selectedDate)
+  #   v = get_volatility_ticker(req.ticker, selectedDate)
+  #   spot = get_spot_ticker(req.ticker, selectedDate)
+  #   garch_price = calculate_garch([strike], [expireDate], selectedDate, r, req.ticker)[0]
+  # else:
+  #   r = req.r
+  #   v = req.v
+  #   spot = req.spot
     
-    # calculate_bs_2(spot, strike_price, expired_date, current_date, r, vol)
-  bs_price = calculate_bs_2(spot, strike, expireDate, selectedDate, r, v)
-  mc_price = calculate_mc_2(spot, strike, expireDate, selectedDate, r, v)
-  data_query = (
-    select(Option2019)
-    .where(Option2019.quotedate == selectedDate)
-    .where(Option2019.expiration == expireDate)
-    .where(Option2019.strike == strike)
-    .where(Option2019.volume > 0)
-    .where(Option2019.type == "call")
-  )
-  options = db.execute(data_query).scalars().all()
-  market_price = 0 if len(options) == 0 else options[0].last
+  #   # calculate_bs_2(spot, strike_price, expired_date, current_date, r, vol)
+  # bs_price = calculate_bs_2(spot, strike, expireDate, selectedDate, r, v)
+  # mc_price = calculate_mc_2(spot, strike, expireDate, selectedDate, r, v)
+  # data_query = (
+  #   select(Option2019)
+  #   .where(Option2019.quotedate == selectedDate)
+  #   .where(Option2019.expiration == expireDate)
+  #   .where(Option2019.strike == strike)
+  #   .where(Option2019.volume > 0)
+  #   .where(Option2019.type == "call")
+  # )
+  # options = db.execute(data_query).scalars().all()
+  # market_price = 0 if len(options) == 0 else options[0].last
 
-  res = {
-    "bs_price": bs_price,
-    "mc_price": mc_price
-  }
-  if req.ticker != "":
-    res["garch_price"] = garch_price
-  if market_price != 0:
-    res["market_price"] = market_price
-  return res
+  # res = {
+  #   "bs_price": bs_price,
+  #   "mc_price": mc_price
+  # }
+  # if req.ticker != "":
+  #   res["garch_price"] = garch_price
+  # if market_price != 0:
+  #   res["market_price"] = market_price
+  return {"res":"tmp"}
 
 class CalPriceRequest2(BaseModel):
   ticker: str
-  selectedDate: str
+  selectedDate: str # _todo change to camelcase
   strike: int
-  expireDate: str
+  expireDate: str # _todo change to camelcase
 @app.post("/calculate-price-2")
 async def calculate_prices(req: CalPriceRequest2, 
   db: Session = Depends(get_db)):
 
   ticker = req.ticker
   strike = req.strike
-  selected_date = req.selectedDate
-  expire_date = req.expireDate
+  selected_date = datetime.strptime(req.selectedDate, "%Y-%m-%d")
+  expire_date = ""
+  if req.expireDate != "":
+    expire_date = datetime.strptime(req.expireDate, "%Y-%m-%d")
 
   return handle_calculate_prices(db, strike, selected_date, expire_date, ticker)
 

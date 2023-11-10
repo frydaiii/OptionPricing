@@ -3,7 +3,8 @@ import json
 from celery.result import AsyncResult
 from back.plot import save_img
 
-def handle_calculate_prices_status(gp_id, garch_id, mc_id, bs_id, market_id):
+def handle_calculate_prices_status(gp_id: str, garch_id: str, mc_id: str, 
+																	 bs_id: str, market_id: str):
 	gp_result = AsyncResult(gp_id)
 	garch_result = AsyncResult(garch_id)
 	mc_result = AsyncResult(mc_id)

@@ -11,14 +11,15 @@ import json
 import uuid
 # from back.gaussian.process import calculate_gp
 
-def handle_calculate_prices(db: Session, strike, current_date, expire_date, ticker):
+def handle_calculate_prices(db: Session, strike: float, current_date: datetime, 
+														expire_date: datetime, ticker: str):
 	expire_dates = []
 	strike_prices = []
 	market_prices = []
 	query = (
 		select(Option2019)
 		.where(Option2019.underlying == ticker)
-		.where(Option2019.quotedate == current_date)
+		.where(Option2019.quotedate == current_date.strftime("%Y-%m-%d"))
 		.where(Option2019.volume > 0)
 		.where(Option2019.type == "call")
 	)
@@ -31,14 +32,15 @@ def handle_calculate_prices(db: Session, strike, current_date, expire_date, tick
 		data = data.scalars().all()
 		strike_prices = [int(opt.strike) for opt in data]
 		market_prices = [opt.last for opt in data]
-		expire_dates = [datetime.strptime(expire_date, "%Y-%m-%d").date()]
+		expire_dates = [datetime.strptime(expire_date, "%Y-%m-%d")]
 	else:
 		query = (query
 							.where(Option2019.strike == strike)
 							.order_by(Option2019.expiration))
 		data = db.execute(query)
 		data = data.scalars().all()
-		expire_dates = [opt.expiration for opt in data]
+		expire_dates = [datetime.combine(opt.expiration, datetime.min.time()) 
+									for opt in data]
 		market_prices = [opt.last for opt in data]
 		strike_prices = [strike]
 
