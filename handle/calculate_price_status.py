@@ -4,8 +4,8 @@ from celery.result import AsyncResult
 
 
 def handle_calculate_price_status(bs_id: str,
-                                   gp_id: str = "",
-                                   garch_id: str = ""):
+                                  gp_id: str = "",
+                                  garch_id: str = ""):
   bs_result = AsyncResult(bs_id)
   response = {}
   if bs_result.successful():
@@ -29,5 +29,13 @@ def handle_calculate_price_status(bs_id: str,
           "state": gp_result.state,
           "info": gp_result.info,
       }
+
+  garch_success = (garch_id != "" and garch_result.successful()) or (garch_id
+                                                                     == "")
+  gp_success = (gp_id != "" and gp_result.successful()) or (gp_id == "")
+  if bs_result.successful() and garch_success and gp_success:
+    response["success"] = True
+  else:
+    response["success"] = False
 
   return response

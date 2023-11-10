@@ -28,7 +28,7 @@ def save_img(id,
     plt.plot(strike_prices,
              prices_bs,
              "-mo",
-             label="IVolatility prices",
+             label="Black Scholes prices",
              markersize=2)
     plt.plot(strike_prices,
              prices_gp,
@@ -40,7 +40,7 @@ def save_img(id,
     plt.xticks(rotation=90)
     plt.plot(expire_dates, market_prices, "-ro", label="Market prices")
     plt.plot(expire_dates, prices_garch, "-yo", label="GARCH prices")
-    plt.plot(expire_dates, prices_bs, "-mo", label="IVolatility prices")
+    plt.plot(expire_dates, prices_bs, "-mo", label="Black Scholes prices")
     plt.plot(expire_dates, prices_gp, "-ko", label="Gaussian Process prices")
 
   plt.legend()
@@ -56,7 +56,7 @@ def save_img(id,
   prices_bs = np.array(prices_bs)
   market_prices = np.array([float(p) for p in market_prices])
   garch_mdape = np.abs((prices_garch - market_prices) / market_prices)
-  ivolatility_mdape = np.abs((prices_bs - market_prices) / market_prices)
+  bs_mdape = np.abs((prices_bs - market_prices) / market_prices)
   gp_mdape = np.abs((prices_gp - market_prices) / market_prices)
   if len(strike_prices) > 1:
     plt.xlabel('Strike Prices')
@@ -66,9 +66,9 @@ def save_img(id,
              label="GARCH MdAPE",
              markersize=2)
     plt.plot(strike_prices,
-             ivolatility_mdape,
+             bs_mdape,
              "-mo",
-             label="IVolatility MdAPE",
+             label="Black Scholes MdAPE",
              markersize=2)
     plt.plot(strike_prices,
              gp_mdape,
@@ -79,7 +79,7 @@ def save_img(id,
     plt.xlabel('Expire Date')
     plt.xticks(rotation=90)
     plt.plot(expire_dates, garch_mdape, "-yo", label="GARCH MdAPE")
-    plt.plot(expire_dates, ivolatility_mdape, "-mo", label="IVolatility MdAPE")
+    plt.plot(expire_dates, bs_mdape, "-mo", label="Black Scholes MdAPE")
     plt.plot(expire_dates, gp_mdape, "-ko", label="Gaussian Process MdAPE")
 
   plt.legend()

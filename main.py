@@ -71,7 +71,6 @@ class CalPriceRequest(BaseModel):
 
 @app.post("/calculate-price")
 async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
-  # _todo move to separate function
   ticker = req.ticker
   current_date = datetime.strptime(req.selectedDate, "%Y-%m-%d")
   spot = req.spot

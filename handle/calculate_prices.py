@@ -21,14 +21,14 @@ def handle_calculate_prices(db: Session, strike: float, current_date: datetime,
       Option2019.quotedate == current_date.strftime("%Y-%m-%d")).where(
           Option2019.volume > 0).where(Option2019.type == "call"))
   if expire_date != "":
-    query = (query.where(Option2019.expiration == expire_date).order_by(
+    query = (query.where(Option2019.expiration == expire_date.date()).order_by(
         Option2019.strike))
 
     data = db.execute(query)
     data = data.scalars().all()
     strike_prices = [int(opt.strike) for opt in data]
     market_prices = [opt.last for opt in data]
-    expire_dates = [datetime.strptime(expire_date, "%Y-%m-%d")]
+    expire_dates = [expire_date]
   else:
     query = (query.where(Option2019.strike == strike).order_by(
         Option2019.expiration))

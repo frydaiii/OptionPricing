@@ -5,7 +5,17 @@ async function UpdateCalculatePriceResult(calResponse) {
   var limit = 200;
   var count = 0;
   while (still_update && ++count < limit) {
-    await Sleep(1000);
+    await Sleep(1500);
+
+    if (!("gp_id" in calResponse)) {
+      calResponse["gp_id"] = "";
+    }
+
+    if (!("garch_id" in calResponse)) {
+      calResponse["garch_id"] = "";
+    }
+
+    console.log(calResponse)
 
     $.ajax({
       url: '/calculate-price-status',
@@ -14,6 +24,9 @@ async function UpdateCalculatePriceResult(calResponse) {
       contentType: 'application/json',
       data: JSON.stringify(calResponse),
       success: function (response) {
+        if (response["success"]) {
+          still_update = false;
+        }
         $('#result-prices').empty();
         $('#result-prices').append(CreateNestedList(response));
       },
@@ -63,4 +76,4 @@ async function UpdateCalculatePrice2Result(calResponse) {
   }
 }
 
-export {UpdateCalculatePrice2Result, UpdateCalculatePriceResult}
+export { UpdateCalculatePrice2Result, UpdateCalculatePriceResult }

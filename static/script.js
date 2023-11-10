@@ -79,10 +79,10 @@ $(document).ready(function () {
     tickerSymbol = $("#symbolTicker").val();
     selectedDate = $("#tradingDate").val();
     expireDate = $("#expirationDate").val();
-    spot = Number($("#spotPrice").val());
+    var spot = Number($("#spotPrice").val());
     strike = Number($("#strikePrice").val());
-    r = parseFloat($("#riskFreeRate").val());
-    v = parseFloat($("#volatility").val());
+    var r = parseFloat($("#riskFreeRate").val());
+    var v = parseFloat($("#volatility").val());
 
     CalculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v)
   });

@@ -36,7 +36,6 @@ class PricingMixin(object):
     # option_prices.append(option_price)
     # self.update_state(state="CALCULATING", meta={"current": len(option_prices), 
     #                                               "total": len(strike_prices)*len(expire_dates)})
-    # _todo update task state
 
   def OptionsPricing(self, strike_prices: List[float], 
                     expire_dates: List[datetime], 
