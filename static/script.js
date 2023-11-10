@@ -192,8 +192,8 @@ $(document).ready(function() {
                         // garch_state.appendChild(document.createTextNode(response["garch"]["state"]));
                         // garch_info.appendChild(document.createTextNode(response["garch"]["info"]));
                         
-                        // const bs_ivo = (document.createElement('li'))
-                        // bs_ivo.appendChild(document.createTextNode("IVolatility:" + response["bs_ivo"]["state"]));
+                        // const bs = (document.createElement('li'))
+                        // bs.appendChild(document.createTextNode("IVolatility:" + response["bs"]["state"]));
                         
                         // const gp = (document.createElement('li'))
                         // const gp_state = document.createElement('li')
@@ -204,7 +204,7 @@ $(document).ready(function() {
                         
                         // para.appendChild(mc);
                         // para.appendChild(garch);
-                        // para.appendChild(bs_ivo);
+                        // para.appendChild(bs);
                         // para.appendChild(gp);
                         $('#image-container-2').empty();
                         $('#image-container-2').append(createNestedList(response));

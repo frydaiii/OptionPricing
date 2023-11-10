@@ -3,6 +3,7 @@ from back.calculators import calculate_mc_2
 from back.utils import *
 import json
 
+# _todo delete this file
 @app.task(bind=True)
 # def calculate(self, spot, strike_prices, expired_dates, current_date, r, vol):
 def calculate(self, strike_prices:[], expire_dates: [], current_date, ticker = "^SPX"):
