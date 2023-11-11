@@ -8,7 +8,8 @@ from tensorflow_probability import distributions as tfd
 class ExpGaussian(likelihoods.ScalarLikelihood):
 
   def Y_given_F(self, F: TensorType) -> tfd.Normal:
-    mu = tf.math.exp(F)
+    # mu = tf.math.exp(F)
+    mu = tf.math.softplus(F)
     sigma = tf.math.sqrt(4 * mu)
     return tfd.Normal(mu, sigma)
 

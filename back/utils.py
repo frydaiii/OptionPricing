@@ -11,12 +11,6 @@ import random
 def get_data(start_date: datetime,
              end_date: datetime,
              ticker: str = "^SPX") -> pd.DataFrame:
-  # if type(start_date) is str:
-  #     start_date = datetime.strptime(start_date, "%Y-%m-%d")
-  # if type(end_date) is str:
-  #     end_date = datetime.strptime(end_date, "%Y-%m-%d")
-  # start_date = datetime.strftime(start_date, "%Y-%m-%d")
-  # end_date = datetime.strftime(end_date, "%Y-%m-%d")
   if ticker != "^SPX":
     return yf.download(ticker, start=start_date, end=end_date)
 
@@ -49,9 +43,6 @@ def get_r(end_date: datetime) -> float:
 
 
 def get_volatility_ticker(ticker: str, date: datetime) -> float:
-  # if type(date) is str:
-  #     date = datetime.strptime(date, "%Y-%m-%d")
-  # filter
   if ticker == "SPX" or ticker == "SPXW":
     ticker = "^SPX"
   # create train data is data 10 years before current_date
@@ -86,10 +77,6 @@ def get_spot_ticker(ticker: str, date: datetime) -> float:
   start_date = end_date - timedelta(days=5)
 
   stock_data = get_data(start_date, end_date, ticker)
-  # if ticker == "^SPX":
-  #     stock_data = get_data(start_date, end_date)
-  # else:
-  #     stock_data = yf.download(ticker, start=start_date, end=end_date)
 
   df_close = stock_data["Close"]
   return df_close.iloc[-1]
@@ -97,13 +84,6 @@ def get_spot_ticker(ticker: str, date: datetime) -> float:
 
 def get_spot(date: datetime) -> float:
   return get_spot_ticker("SPX", date)
-
-
-# def get_random_string(length: int):
-#     # choose from all lowercase letter
-#     letters = string.ascii_lowercase
-#     result_str = ''.join(random.choice(letters) for i in range(length))
-#     return result_str
 
 
 def get_price_and_r(start_date: datetime, end_date: datetime,

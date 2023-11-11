@@ -21,8 +21,9 @@ def handle_calculate_prices(db: Session, strike: float, current_date: datetime,
       Option2019.quotedate == current_date.strftime("%Y-%m-%d")).where(
           Option2019.volume > 0).where(Option2019.type == "call"))
   if expire_date != "":
-    query = (query.where(Option2019.expiration == expire_date.date()).order_by(
-        Option2019.strike))
+    query = (query.where(
+        Option2019.expiration == expire_date.strftime("%Y-%m-%d")).order_by(
+            Option2019.strike))
 
     data = db.execute(query)
     data = data.scalars().all()

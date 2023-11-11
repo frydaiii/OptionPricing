@@ -53,12 +53,12 @@ class GARCH(LogLikelihooMixin, PricingMixin):
 
     # Parameters optimization, scipy does not have a maximize function, so we minimize the opposite of the equation described earlier
     opt = scipy.optimize.minimize(
-      self.LogLikelihood, parameters, bounds=((0.001, 1), (0.001, 1), (0.001, 1))
+      self.LogLikelihood, parameters, bounds=((1e-6, None), (1e-6, None), (1e-6, None))
     )
 
     variance = (
       0.01**2 * opt.x[0] / (1 - opt.x[1] - opt.x[2])
     )  # Times .01**2 because it concerns squared returns
 
-    self.params = parameters # _todo check value of this, currently it's wrong
-    return np.append(opt.x, variance)
+    self.params = opt.x
+    return

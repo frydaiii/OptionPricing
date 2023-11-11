@@ -1,5 +1,4 @@
 import yfinance as yf
-import pandas as pd
 import datetime
 
 # Define the stock symbol for S&P 500
