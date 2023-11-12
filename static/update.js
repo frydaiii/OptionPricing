@@ -24,7 +24,7 @@ async function UpdateCalculatePriceResult(calResponse) {
       contentType: 'application/json',
       data: JSON.stringify(calResponse),
       success: function (response) {
-        if (response["success"]) {
+        if (response["done"]) {
           still_update = false;
         }
         $('#result-prices').empty();
@@ -53,7 +53,7 @@ async function UpdateCalculatePrice2Result(calResponse) {
       success: function (response) {
         // Handle the response from the calculation API
         console.log('Calculation result:', response);
-        if (response["success"]) {
+        if (response["done"]) {
 
           // Create an image element and set its src attribute
           var imageElement = $('<img>').attr('src', response["img1"] + '?t=' + new Date().getTime());

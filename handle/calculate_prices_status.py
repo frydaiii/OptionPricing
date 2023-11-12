@@ -24,10 +24,10 @@ def handle_calculate_prices_status(gp_id: str, garch_id: str, bs_id: str,
     img1, img2 = save_img(market_id, garch_prices, bs_prices, gp_prices,
                           market_prices, strike_prices, expire_dates)
 
-    return {"success": True, "img1": img1, "img2": img2}
-  else:
+    return {"done": True, "img1": img1, "img2": img2}
+  elif (gp_result.failed() or garch_result.failed() or bs_result.failed()):
     return {
-        "success": False,
+        "done": True,
         "gp": {
             "state": gp_result.state,
             "info": gp_result.info,
@@ -38,5 +38,21 @@ def handle_calculate_prices_status(gp_id: str, garch_id: str, bs_id: str,
         },
         "bs": {
             "state": bs_result.state,
+        },
+    }
+  else:
+    return {
+        "done": False,
+        "gp": {
+            "state": gp_result.state,
+            "info": gp_result.info,
+        },
+        "garch": {
+            "state": garch_result.state,
+            "info": garch_result.info,
+        },
+        "bs": {
+            "state": bs_result.state,
+            "info": bs_result.info,
         },
     }

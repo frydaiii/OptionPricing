@@ -34,8 +34,8 @@ def handle_calculate_price_status(bs_id: str,
                                                                      == "")
   gp_success = (gp_id != "" and gp_result.successful()) or (gp_id == "")
   if bs_result.successful() and garch_success and gp_success:
-    response["success"] = True
+    response["done"] = True
   else:
-    response["success"] = False
+    response["done"] = False
 
   return response
