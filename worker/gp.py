@@ -14,10 +14,7 @@ def calculate(self,
               current_date: datetime,
               ticker="^SPX"):
   assert not (len(strike_prices) > 1 and len(expire_dates) > 1)
-
-  if ticker == "SPX" or ticker == "" or ticker == "SPXW":
-    ticker = "^SPX"
-
+  
   # prepare data
   start_date = current_date - timedelta(days=5 * 365)
   end_date = current_date

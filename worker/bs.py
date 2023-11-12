@@ -3,6 +3,7 @@ from back.utils import *
 import json
 from back.black_scholes import OptionPricing
 from datetime import datetime
+from back.garch.main import GARCH
 
 
 @app.task(bind=True)
@@ -14,7 +15,15 @@ def calculate(self,
               ticker="^SPX"):
   spot = get_spot_ticker(ticker, current_date)
   r = get_r(current_date)
-  vol = get_volatility_ticker(ticker, current_date)
+
+  # get volatility
+  end_date = current_date
+  start_date = end_date - timedelta(days=365 * 10)
+  model = GARCH(self)
+  model.InitializeData(start_date, end_date, ticker)
+  model.Optimize()
+  vol = math.sqrt(model.IncorrectUnconditionalVariance() * 365)
+
   option_prices = []
   for strike_price in strike_prices:
     for expire_date in expire_dates:

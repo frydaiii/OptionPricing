@@ -11,11 +11,13 @@ def handle_calculate_price(spot: float,
                            r: float,
                            v: float,
                            ticker: str = ""):
-  if ticker == "":
+  if ticker == "": # _todo use garch to cal vol
     bs_task = bs.CalculateSingle.delay(spot, strike, current_date, expire_date,
                                        r, v)
     return {"bs_id": bs_task.id}
   else:
+    if ticker == "SPX" or ticker == "SPXW" or ticker == "":
+      ticker = "^SPX"
     r = get_r(current_date)
     v = get_volatility_ticker(ticker, current_date)
     spot = get_spot_ticker(ticker, current_date)

@@ -43,6 +43,12 @@ class GARCH(LogLikelihooMixin, PricingMixin):
     self.r = r
     self.ticker = ticker
 
+  def IncorrectUnconditionalVariance(self):
+    omega = self.params[0]
+    alpha = self.params[1]
+    beta = self.params[2]
+    return omega * (1 - alpha - beta)
+
   def Optimize(self):
     "Optimizes the log likelihood function and returns estimated coefficients"
     self.task.update_state("OPTIMIZING")
@@ -53,7 +59,6 @@ class GARCH(LogLikelihooMixin, PricingMixin):
       alpha = params[1]
       beta = params[2]
       lambd = params[3]
-      print("params: ", alpha, beta, lambd)
       return 1 - alpha * (1 + lambd**2) - beta
 
     opt = scipy.optimize.minimize(self.LogLikelihood,

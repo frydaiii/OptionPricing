@@ -41,6 +41,9 @@ def handle_calculate_prices(db: Session, strike: float, current_date: datetime,
     market_prices = [opt.last for opt in data]
     strike_prices = [strike]
 
+  if ticker == "SPX" or ticker == "SPXW" or ticker == "":
+    ticker = "^SPX"
+
   gp_task = gp.calculate.delay(strike_prices, expire_dates, current_date,
                                ticker)
   garch_task = garch.calculate.delay(strike_prices, expire_dates, current_date,

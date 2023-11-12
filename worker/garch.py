@@ -19,8 +19,6 @@ def calculate(self,
               current_date: datetime,
               ticker=""):
   assert not (len(strike_prices) > 1 and len(expire_dates) > 1)
-  if ticker == "SPX" or ticker == "" or ticker == "SPXW":
-    ticker = "^SPX"
 
   # get historical data of spx
   end_date = current_date
