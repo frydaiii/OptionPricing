@@ -29,7 +29,8 @@ def calculate(self,
   model = GARCH(self)
   model.InitializeData(start_date, end_date, ticker)
   model.Optimize()
-  option_prices = model.OptionsPricing(strike_prices, expire_dates,
+  H0 = model.Variance(model.params)[-1]  # last estimated conditional variance
+  option_prices = model.OptionsPricing(H0, strike_prices, expire_dates,
                                        current_date)
 
   rd.set(self.request.id, json.dumps(option_prices))
