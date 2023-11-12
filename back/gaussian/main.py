@@ -67,4 +67,4 @@ class GaussianProcess(OptiomizerMixin, PricingMixin):
     maxiter_natgrad = reduce_in_tests(10000)
     # Perform optimization.
     self.RunAdam(maxiter_adam, train_iter)
-    self.RunNatGrad(maxiter_natgrad, train_iter)
+    # self.RunNatGrad(maxiter_natgrad, train_iter)

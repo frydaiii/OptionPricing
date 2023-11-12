@@ -27,7 +27,7 @@ class PricingMixin(object):
     lnS = np.concatenate((np.full(shape=(1, num_simulations),
                                   fill_value=np.log(spot)), lnS))
     for i in range(1, steps + 1):
-      # _todo this formula could be improved
+      # _todo this formula could be improved by numpy
       H[i] = omega + (alpha * (Z[i - 1] - lambd)**2 + beta) * H[i - 1]
       lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
 

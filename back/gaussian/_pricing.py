@@ -19,17 +19,16 @@ class PricingMixin(object):
     K = tf.cast(strike_price, tf.float64)
     daily_r = tf.cast(r / 360, tf.float64)
     sims = 1000
-    for i in range(0, dte):
-      random = tf.random.normal(shape=[dte, sims],
-                                mean=0.0,
-                                stddev=1.0,
-                                dtype=tf.float64)
-      scale = daily_r - tf.cast(0.5, tf.float64) * (
-          predicted_Y_mean + tf.math.sqrt(predicted_Y_var) * random)
-      ln_S = tf.math.log(spot) + tf.math.cumsum(scale, axis=0)
+    random = tf.random.normal(shape=[dte, sims],
+                              mean=0.0,
+                              stddev=1.0,
+                              dtype=tf.float64)
+    log_return = daily_r - tf.cast(0.5, tf.float64) * (
+        predicted_Y_mean + tf.math.sqrt(predicted_Y_var) * random)
+    ln_S = tf.math.log(spot) + tf.math.cumsum(log_return, axis=0)
 
     S = tf.math.exp(ln_S)
-    payoffs = np.maximum(S[-1] - K, 0)
+    payoffs = np.maximum(S - K, 0)
     option_price = np.mean(payoffs) * np.exp(-r * (dte / 365))
     # _todo update task state
     return option_price
