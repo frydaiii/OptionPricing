@@ -12,14 +12,15 @@ import uuid
 # from back.gaussian.process import calculate_gp
 
 
-def handle_calculate_prices(db: Session, strike: float, current_date: datetime,
-                            expire_date: datetime, ticker: str):
+def handle_calculate_prices(db: Session, type: str, strike: float,
+                            current_date: datetime, expire_date: datetime,
+                            ticker: str):
   expire_dates = []
   strike_prices = []
   market_prices = []
   query = (select(Option2019).where(Option2019.underlying == ticker).where(
       Option2019.quotedate == current_date.strftime("%Y-%m-%d")).where(
-          Option2019.volume > 0).where(Option2019.type == "call"))
+          Option2019.volume > 0).where(Option2019.type == type))
   if expire_date != "":
     query = (query.where(
         Option2019.expiration == expire_date.strftime("%Y-%m-%d")).order_by(
@@ -44,11 +45,11 @@ def handle_calculate_prices(db: Session, strike: float, current_date: datetime,
   if ticker == "SPX" or ticker == "SPXW" or ticker == "":
     ticker = "^SPX"
 
-  gp_task = gp.calculate.delay(strike_prices, expire_dates, current_date,
+  gp_task = gp.calculate.delay(type, strike_prices, expire_dates, current_date,
                                ticker)
-  garch_task = garch.calculate.delay(strike_prices, expire_dates, current_date,
-                                     ticker)
-  bs_task = bs.calculate.delay(strike_prices, expire_dates, current_date,
+  garch_task = garch.calculate.delay(type, strike_prices, expire_dates,
+                                     current_date, ticker)
+  bs_task = bs.calculate.delay(type, strike_prices, expire_dates, current_date,
                                ticker)
   market_id = str(uuid.uuid4())
   market_info = {

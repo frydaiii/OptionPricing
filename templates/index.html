@@ -15,8 +15,8 @@
 
   <div class="container"> <!-- Add a container for content -->
     <ul class="tabs">
-      <li class="tab-link current" data-tab="tab1">Tab 1</li>
-      <li class="tab-link" data-tab="tab2">Tab 2</li>
+      <li class="tab-link current" data-tab="tab1">I</li>
+      <li class="tab-link" data-tab="tab2">II</li>
     </ul>
 
     <div id="tab1" class="tab-content current">
@@ -28,6 +28,16 @@
           </label>
           <label>
             <input type="radio" name="optionChoice" value="calSpecific"> Calculate specific option
+          </label>
+        </div>
+        <br>
+        <div class="radio-group">
+          <label for="type">Choose a type:</label>
+          <label>
+            <input type="radio" name="type" value="call"> Call
+          </label>
+          <label>
+            <input type="radio" name="type" value="put"> Put
           </label>
         </div>
         <br>
@@ -78,6 +88,16 @@
 
     <div id="tab2" class="tab-content">
       <form class="optionForm" id="form2">
+        <div class="radio-group">
+          <label for="type">Choose a type:</label>
+          <label>
+            <input type="radio" name="type" value="call"> Call
+          </label>
+          <label>
+            <input type="radio" name="type" value="put"> Put
+          </label>
+        </div>
+        <br>
         <div class="form-group">
           <label for="optionSelect2">Choose ticker:</label>
           <select id="optionSelect2" required>

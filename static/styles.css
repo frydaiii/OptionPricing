@@ -48,6 +48,7 @@ select:invalid {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 5px 5px 0 0;
+    width: 200px;
 }
 
 .tab-link.current {

@@ -60,6 +60,7 @@ def get_ticker_symbols():
 
 # calculate price request model
 class CalPriceRequest(BaseModel):
+  type: str
   ticker: str
   selectedDate: str  # _todo change to camelcase
   spot: int
@@ -71,6 +72,7 @@ class CalPriceRequest(BaseModel):
 
 @app.post("/calculate-price")
 async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
+  type = req.type
   ticker = req.ticker
   current_date = datetime.strptime(req.selectedDate, "%Y-%m-%d")
   spot = req.spot
@@ -79,8 +81,8 @@ async def calculate_price(req: CalPriceRequest, db: Session = Depends(get_db)):
   r = req.r
   v = req.v
 
-  return handle_calculate_price(spot, strike, current_date, expire_date, r, v,
-                                ticker)
+  return handle_calculate_price(type, spot, strike, current_date, expire_date,
+                                r, v, ticker)
 
 
 class CalPriceRequestStatus(BaseModel):
@@ -99,6 +101,7 @@ async def get_calculate_prices_status(req: CalPriceRequestStatus):
 
 
 class CalPriceRequest2(BaseModel):
+  type: str
   ticker: str
   selectedDate: str  # _todo change to camelcase
   strike: int
@@ -108,7 +111,7 @@ class CalPriceRequest2(BaseModel):
 @app.post("/calculate-price-2")
 async def calculate_prices(req: CalPriceRequest2,
                            db: Session = Depends(get_db)):
-
+  type = req.type
   ticker = req.ticker
   strike = req.strike
   selected_date = datetime.strptime(req.selectedDate, "%Y-%m-%d")
@@ -116,7 +119,7 @@ async def calculate_prices(req: CalPriceRequest2,
   if req.expireDate != "":
     expire_date = datetime.strptime(req.expireDate, "%Y-%m-%d")
 
-  return handle_calculate_prices(db, strike, selected_date, expire_date,
+  return handle_calculate_prices(db, type, strike, selected_date, expire_date,
                                  ticker)
 
 
@@ -134,8 +137,7 @@ async def get_calculate_prices_status(req: CalPriceRequest2Status):
   bs_id = req.bs_id
   market_id = req.market_id
 
-  return handle_calculate_prices_status(gp_id, garch_id, bs_id,
-                                        market_id)
+  return handle_calculate_prices_status(gp_id, garch_id, bs_id, market_id)
 
 
 @app.on_event("startup")

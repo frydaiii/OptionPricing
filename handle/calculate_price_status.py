@@ -32,8 +32,11 @@ def handle_calculate_price_status(bs_id: str,
 
   garch_success = (garch_id != "" and garch_result.successful()) or (garch_id
                                                                      == "")
+  garch_failed = (garch_id != "" and garch_result.failed()) or (garch_id == "")
   gp_success = (gp_id != "" and gp_result.successful()) or (gp_id == "")
-  if bs_result.successful() and garch_success and gp_success:
+  gp_failed = (gp_id != "" and gp_result.failed()) or (gp_id == "")
+  if (bs_result.successful() and garch_success
+      and gp_success) or bs_result.failed() or garch_failed or gp_failed:
     response["done"] = True
   else:
     response["done"] = False

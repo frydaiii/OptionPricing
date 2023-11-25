@@ -4,14 +4,15 @@ from datetime import datetime
 from back.utils import get_spot_ticker, get_volatility_ticker, get_r
 
 
-def handle_calculate_price(spot: float,
+def handle_calculate_price(type: str,
+                           spot: float,
                            strike: float,
                            current_date: datetime,
                            expire_date: datetime,
                            r: float,
                            v: float,
                            ticker: str = ""):
-  if ticker == "": # _todo use garch to cal vol
+  if ticker == "":  # _todo use garch to cal vol
     bs_task = bs.CalculateSingle.delay(spot, strike, current_date, expire_date,
                                        r, v)
     return {"bs_id": bs_task.id}
@@ -21,11 +22,12 @@ def handle_calculate_price(spot: float,
     r = get_r(current_date)
     v = get_volatility_ticker(ticker, current_date)
     spot = get_spot_ticker(ticker, current_date)
-    bs_task = bs.CalculateSingle.delay(spot, strike, current_date, expire_date,
-                                       r, v)
-    gp_task = gp.calculate.delay([strike], [expire_date], current_date, ticker)
-    garch_task = garch.calculate.delay([strike], [expire_date], current_date,
-                                       ticker)
+    bs_task = bs.CalculateSingle.delay(type, spot, strike, current_date,
+                                       expire_date, r, v)
+    gp_task = gp.calculate.delay(type, [strike], [expire_date], current_date,
+                                 ticker)
+    garch_task = garch.calculate.delay(type, [strike], [expire_date],
+                                       current_date, ticker)
     return {
         "gp_id": gp_task.id,
         "garch_id": garch_task.id,

@@ -76,6 +76,7 @@ $(document).ready(function () {
     $('#result-prices').empty();
 
     // Get selected ticker symbol and date from the form
+    var type=$("input[name='type']:checked").val()
     tickerSymbol = $("#symbolTicker").val();
     selectedDate = $("#tradingDate").val();
     expireDate = $("#expirationDate").val();
@@ -84,20 +85,21 @@ $(document).ready(function () {
     var r = parseFloat($("#riskFreeRate").val());
     var v = parseFloat($("#volatility").val());
 
-    CalculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v)
+    CalculatePrice(type, tickerSymbol, selectedDate, spot, strike, expireDate, r, v)
   });
   $("#form2").submit(function (event) {
     event.preventDefault(); // Prevent the default form submission
     $('#image-container-2').empty();
 
     // Get selected ticker symbol and date from the form
+    var type=$("input[name='type']:checked").val()
     tickerSymbol = $("#optionSelect2").val();
     selectedDate = $("#tradingDate2").val();
     expireDate = $("#expirationDate2").val();
     strike = Number($("#strikePrice2").val());
 
     // Make the API request after form submission
-    CalculatePrice2(tickerSymbol, selectedDate, strike, expireDate);
+    CalculatePrice2(type, tickerSymbol, selectedDate, strike, expireDate);
   });
 
   $(".tab-link").on("click", function () {

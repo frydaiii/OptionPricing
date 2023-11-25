@@ -1,7 +1,8 @@
 import {UpdateCalculatePrice2Result, UpdateCalculatePriceResult} from "./update.js"
 
-function CalculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r, v) {
+function CalculatePrice(type, tickerSymbol, selectedDate, spot, strike, expireDate, r, v) {
   var requestData = {
+    type: type,
     ticker: tickerSymbol,
     selectedDate: selectedDate,
     spot: spot,
@@ -26,8 +27,9 @@ function CalculatePrice(tickerSymbol, selectedDate, spot, strike, expireDate, r,
   });
 }
 
-function CalculatePrice2(ticker, selectedDate, strike, expireDate) {
+function CalculatePrice2(type, ticker, selectedDate, strike, expireDate) {
   var requestData = {
+    type: type,
     ticker: ticker,
     selectedDate: selectedDate,
     strike: strike,

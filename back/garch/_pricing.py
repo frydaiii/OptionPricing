@@ -8,7 +8,7 @@ from statistics import variance
 
 class PricingMixin(object):
 
-  def OptionPricing(self, H0: float, spot: float, strike_price: float,
+  def OptionPricing(self, type, H0: float, spot: float, strike_price: float,
                     expire_date: datetime, current_date: datetime, r: float):
     omega = self.params[0]
     alpha = self.params[1]
@@ -32,12 +32,15 @@ class PricingMixin(object):
       lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
 
     paths = np.exp(lnS)
-    payoffs = np.maximum(paths[-1] - strike_price, 0)
+    if type == "call":
+      payoffs = np.maximum(paths[-1] - strike_price, 0)
+    else:
+      payoffs = np.maximum(strike_price - paths[-1], 0)
     option_price = np.mean(payoffs) * np.exp(
         -r * T)  # discounting back to present value
     return option_price
 
-  def OptionsPricing(self, H0: float, strike_prices: List[float],
+  def OptionsPricing(self, type: str, H0: float, strike_prices: List[float],
                      expire_dates: List[datetime],
                      current_date: datetime) -> List[float]:
     assert not (len(strike_prices) > 1 and len(expire_dates) > 1)
@@ -47,7 +50,7 @@ class PricingMixin(object):
     for strike_price in strike_prices:
       for expire_date in expire_dates:
         prices.append(
-            self.OptionPricing(H0, spot, strike_price, expire_date,
+            self.OptionPricing(type, H0, spot, strike_price, expire_date,
                                current_date, r))
         self.task.update_state(state="CALCULATING",
                                meta={
