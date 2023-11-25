@@ -15,7 +15,7 @@ class PricingMixin(object):
     beta = self.params[2]
     lambd = self.params[3]
     daily_r = r / 365
-    dte = (expire_date - current_date).days  # _todo recalculating this
+    dte = (expire_date - current_date).days
     T = dte / 365
     steps = dte
     num_simulations = 1000
@@ -27,7 +27,7 @@ class PricingMixin(object):
     lnS = np.concatenate((np.full(shape=(1, num_simulations),
                                   fill_value=np.log(spot)), lnS))
     for i in range(1, steps + 1):
-      # _todo this formula could be improved by numpy
+      # _todo this formula could be shorten by using cumsum
       H[i] = omega + (alpha * (Z[i - 1] - lambd)**2 + beta) * H[i - 1]
       lnS[i] = lnS[i - 1] + daily_r - 0.5 * H[i] + Z[i] * np.sqrt(H[i])
 

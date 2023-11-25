@@ -4,7 +4,7 @@ import gpflow
 
 class OptiomizerMixin(object):
 
-  def RunAdam(self, iterations: int, train_iter):  # _todo update type hint
+  def RunAdam(self, iterations: int, train_iter):
     """
     :param model: GPflow model
     :param iterations: number of iterations
@@ -32,7 +32,7 @@ class OptiomizerMixin(object):
         logf.append(elbo)
     return logf
 
-  def RunNatGrad(self, iterations: int, train_iter):  # _todo update type hint
+  def RunNatGrad(self, iterations: int, train_iter):
     """
     :param model: GPflow model
     :param iterations: number of iterations
