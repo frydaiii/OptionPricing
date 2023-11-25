@@ -13,8 +13,8 @@ def handle_calculate_price(type: str,
                            v: float,
                            ticker: str = ""):
   if ticker == "":  # _todo use garch to cal vol
-    bs_task = bs.CalculateSingle.delay(spot, strike, current_date, expire_date,
-                                       r, v)
+    bs_task = bs.CalculateSingle.delay(type, spot, strike, current_date,
+                                       expire_date, r, v)
     return {"bs_id": bs_task.id}
   else:
     if ticker == "SPX" or ticker == "SPXW" or ticker == "":
