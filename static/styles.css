@@ -48,6 +48,7 @@ select:invalid {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 5px 5px 0 0;
+    width: 200px;
 }
 
 .tab-link.current {
@@ -72,7 +73,7 @@ select:invalid {
     display: flex;
     flex-direction: column;
     align-items: stretch; /* Stretch items to fill the width */
-    width: 400px; /* Adjust the maximum width as needed */
+    width: 600px; /* Adjust the maximum width as needed */
     margin: 0 auto;
 }
 
@@ -103,4 +104,10 @@ select {
 #pagination-controls, #image-container {
     display: flex;
     justify-content: center;
+}
+
+#image-container-2 {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }
