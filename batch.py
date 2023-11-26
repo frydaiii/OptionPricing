@@ -39,8 +39,8 @@ dict_garch_model = {}
 garch_result = []
 for _, row in options.iterrows():
   #debug
-  # if row["type"] == "call" or row["quotedate"] != '2019-12-04' or row[
-  #     "expiration"] != '2019-12-16' or row["strike"] != 2475.0:
+  # if row["quotedate"] != '2019-10-02' or row[
+  #     "expiration"] != '2019-10-18' or row["strike"] != 3030.0:
   #   continue
 
   expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
@@ -65,7 +65,7 @@ for _, row in options.iterrows():
   spot = stock_data["Close"].iloc[-1]
 
   garch_result.append(
-      model.OptionPricing(type, H0, spot, row["strike"], expire_date,
+      model.OptionPricing(row["type"], H0, spot, row["strike"], expire_date,
                           current_date, r))
 
 options["garch"] = garch_result

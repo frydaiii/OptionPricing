@@ -8,8 +8,9 @@ from statistics import variance
 
 class PricingMixin(object):
 
-  def OptionPricing(self, type, H0: float, spot: float, strike_price: float,
-                    expire_date: datetime, current_date: datetime, r: float):
+  def OptionPricing(self, type: str, H0: float, spot: float,
+                    strike_price: float, expire_date: datetime,
+                    current_date: datetime, r: float):
     omega = self.params[0]
     alpha = self.params[1]
     beta = self.params[2]
