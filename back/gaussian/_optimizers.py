@@ -23,12 +23,6 @@ class OptiomizerMixin(object):
       optimization_step()
       if step % 1000 == 0:
         elbo = -training_loss().numpy()
-        # print(step, elbo)
-        self.task.update_state(state='TRAINING Adam',
-                               meta={
-                                   "current": step,
-                                   "total": iterations
-                               })
         logf.append(elbo)
     return logf
 
@@ -51,11 +45,5 @@ class OptiomizerMixin(object):
       optimization_step()
       if step % 1000 == 0:
         elbo = -training_loss().numpy()
-        # print(step, elbo)
-        self.task.update_state(state='TRAINING NatGrad',
-                               meta={
-                                   "current": step,
-                                   "total": iterations
-                               })
         logf.append(elbo)
     return logf

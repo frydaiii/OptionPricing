@@ -52,11 +52,5 @@ class PricingMixin(object):
         prices.append(
             self.OptionPricing(type, H0, spot, strike_price, expire_date,
                                current_date, r))
-        self.task.update_state(state="CALCULATING",
-                               meta={
-                                   "current": len(prices),
-                                   "total":
-                                   len(strike_prices) * len(expire_dates)
-                               })
 
     return prices

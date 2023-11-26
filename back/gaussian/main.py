@@ -9,12 +9,11 @@ from back.gaussian.likelihoods import ExpGaussian
 from gpflow.ci_utils import reduce_in_tests
 from back.gaussian._optimizers import OptiomizerMixin
 from back.gaussian._pricing import PricingMixin
-from celery import Task
 
 
 class GaussianProcess(OptiomizerMixin, PricingMixin):
 
-  def __init__(self, task: Task):
+  def __init__(self):
     # model component
     self.X = None
     self.Y = None
@@ -25,7 +24,6 @@ class GaussianProcess(OptiomizerMixin, PricingMixin):
     self.start_date = None
     self.end_date = None
     self.ticker = ""
-    self.task = task  # celery task for update status
 
   def InitializeData(self, start_date: datetime, end_date: datetime,
                      ticker: str):
