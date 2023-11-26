@@ -14,27 +14,27 @@ options = pd.read_csv('options_2019.csv')
 dict_r = {}
 
 # Black-Scholes ----------------------------------------------------------------
-# bs_result = []
-# for _, row in options.iterrows():
-#   expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
-#   current_date = datetime.strptime(row["quotedate"], "%Y-%m-%d")
-#   end_date = current_date
-#   start_date = end_date - timedelta(days=365 * 10)
-#   if row["quotedate"] in dict_r:
-#     r = dict_r[row["quotedate"]]
-#   else:
-#     stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
-#     r = r[-1]
-#     dict_r[row["quotedate"]] = r
-#   spot = stock_data["Close"].iloc[-1]
-#   log_return = np.log1p(stock_data["Close"].pct_change().dropna().to_numpy())
-#   vol = np.std(log_return) * np.sqrt(252)
+bs_result = []
+for _, row in options.iterrows():
+  expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
+  current_date = datetime.strptime(row["quotedate"], "%Y-%m-%d")
+  end_date = current_date
+  start_date = end_date - timedelta(days=365 * 10)
+  if row["quotedate"] in dict_r:
+    r = dict_r[row["quotedate"]]
+  else:
+    stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
+    r = r[-1]
+    dict_r[row["quotedate"]] = r
+  spot = stock_data["Close"].iloc[-1]
+  log_return = np.log1p(stock_data["Close"].pct_change().dropna().to_numpy())
+  vol = np.std(log_return) * np.sqrt(252)
 
-#   bs_result.append(
-#       black_scholes.OptionPricing(row["type"], spot, row["strike"],
-#                                   expire_date, current_date, r, vol))
+  bs_result.append(
+      black_scholes.OptionPricing(row["type"], spot, row["strike"],
+                                  expire_date, current_date, r, vol))
 
-# options["bs"] = bs_result
+options["bs"] = bs_result
 
 # GARCH-------------------------------------------------------------------------
 dict_garch_model = {}
@@ -74,39 +74,39 @@ for _, row in options.iterrows():
 options["garch"] = garch_result
 
 # GP----------------------------------------------------------------------------
-# dict_gp_model = {}
-# gp_result = []
-# for _, row in options.iterrows():
-#   # debug
-#   if row["quotedate"] != '2019-10-02' or row[
-#       "expiration"] != '2019-10-18' or row["strike"] != 3030.0:
-#     continue
+dict_gp_model = {}
+gp_result = []
+for _, row in options.iterrows():
+  # debug
+  if row["quotedate"] != '2019-10-02' or row[
+      "expiration"] != '2019-10-18' or row["strike"] != 3030.0:
+    continue
 
-#   expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
-#   current_date = datetime.strptime(row["quotedate"], "%Y-%m-%d")
-#   end_date = current_date
-#   start_date = end_date - timedelta(days=365 * 10)
-#   if row["quotedate"] in dict_r:
-#     r = dict_r[row["quotedate"]]
-#   else:
-#     stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
-#     r = r[-1]
-#     dict_r[row["quotedate"]] = r
+  expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
+  current_date = datetime.strptime(row["quotedate"], "%Y-%m-%d")
+  end_date = current_date
+  start_date = end_date - timedelta(days=365 * 10)
+  if row["quotedate"] in dict_r:
+    r = dict_r[row["quotedate"]]
+  else:
+    stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
+    r = r[-1]
+    dict_r[row["quotedate"]] = r
 
-#   if row["quotedate"] in dict_gp_model:
-#     model = dict_gp_model[row["quotedate"]]
-#   else:
-#     model = GaussianProcess()
-#     model.InitializeData(start_date, end_date, "^SPX")
-#     model.Train()
-#     dict_gp_model[row["quotedate"]] = model
+  if row["quotedate"] in dict_gp_model:
+    model = dict_gp_model[row["quotedate"]]
+  else:
+    model = GaussianProcess()
+    model.InitializeData(start_date, end_date, "^SPX")
+    model.Train()
+    dict_gp_model[row["quotedate"]] = model
 
-#   spot = stock_data["Close"].iloc[-1]
+  spot = stock_data["Close"].iloc[-1]
 
-#   gp_result.append(
-#       model.OptionPricing(row["type"], spot, row["strike"], expire_date,
-#                           current_date, r))
+  gp_result.append(
+      model.OptionPricing(row["type"], spot, row["strike"], expire_date,
+                          current_date, r))
 
-# options["gp"] = gp_result
+options["gp"] = gp_result
 
 options.to_csv("result_options_2019.csv")
