@@ -6,8 +6,8 @@ from datetime import timedelta, datetime
 import numpy as np
 from back.garch.main import GARCH
 from back.gaussian.main import GaussianProcess
-# import warnings
-# warnings.filterwarnings("error")
+import warnings
+warnings.filterwarnings("error")
 
 options = pd.read_csv('options_2019.csv')
 
