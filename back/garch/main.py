@@ -33,7 +33,7 @@ class GARCH(LogLikelihooMixin, PricingMixin):
   def Optimize(self):
     "Optimizes the log likelihood function and returns estimated coefficients"
     # Parameters initialization
-    print("Optimizing the log likelihood function")
+    print("Optimizing GARCH...............")
     parameters = [0.1, 0.92, 0.05, 0]
 
     def Constraint(params):

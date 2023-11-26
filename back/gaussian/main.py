@@ -54,6 +54,7 @@ class GaussianProcess(OptiomizerMixin, PricingMixin):
     )
 
   def Train(self):
+    print("training GP...........................")
     gpflow.set_trainable(self.model.inducing_variable, True)
     minibatch_size = 100
     train_dataset = (tf.data.Dataset.from_tensor_slices(
