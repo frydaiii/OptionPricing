@@ -89,5 +89,32 @@ def get_spot(date: datetime) -> float:
 def get_price_and_r(start_date: datetime, end_date: datetime,
                     ticker: str) -> (pd.DataFrame, float):
   stock_data = get_data(start_date, end_date, ticker)
-  r = get_r(end_date)
+  tb_rate = yf.download("^IRX", start=start_date, end=end_date)
+  r = tb_rate["Close"].to_numpy() / 100
+  if len(r) < len(stock_data):
+    gap = len(stock_data) - len(r)
+    for _ in range(1, gap):
+      r = np.append(r, r[-1])
+
+  # if len(r) != len(stock_data):
+  #   print("r-----", len(r))
+  #   print("stock_data-----", len(stock_data))
+
+  assert len(r) == len(stock_data) - 1
   return (stock_data, r)
+
+def dte_count(start_date, end_date):
+    # Calculate the total number of days between start_date and end_date
+    total_days = (end_date - start_date).days
+
+    # Calculate the number of weekend days within the total_days range
+    weekend_days = 0
+    for day in range(total_days + 1):
+        current_day = start_date + timedelta(days=day)
+        if current_day.weekday() in [5, 6]:  # 5 is Saturday, 6 is Sunday
+            weekend_days += 1
+
+    # Calculate the weekday difference by subtracting weekend days
+    weekday_difference = total_days - weekend_days
+
+    return weekday_difference

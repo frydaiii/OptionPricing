@@ -44,8 +44,8 @@ class GARCH(LogLikelihooMixin, PricingMixin):
 
     opt = scipy.optimize.minimize(self.LogLikelihood,
                                   parameters,
-                                  bounds=((1e-10, None), (1e-10, None),
-                                          (1e-10, None), (1e-10, None)))
+                                  bounds=((1e-10, None), (0, None),
+                                          (0, None), (0, None)))
 
     if Constraint(opt.x) <= 0:
       # I use this to check params value, because add constraints to minimize

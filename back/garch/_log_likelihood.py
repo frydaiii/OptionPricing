@@ -23,11 +23,11 @@ class LogLikelihooMixin(object):
     # Filling the array, if i == 0 then uses the long term variance.
     for i in range(length):
       if i == 0:
-        # sigma_2[i] = omega / (1 - alpha * (1 + lambd**2) - beta)
+        # # sigma_2[i] = omega / (1 - alpha * (1 + lambd**2) - beta)
         sigma_2[i] = np.std(self.log_returns)**2
       else:
         epsilon_prev = self.log_returns[
-            i - 1] - self.r / 360 + 0.5 * sigma_2[i - 1]
+            i - 1] - self.r[i-1] / 360 + 0.5 * sigma_2[i - 1]
         sigma_2[i] = (omega + alpha *
                       (epsilon_prev - lambd * math.sqrt(sigma_2[i - 1]))**2 +
                       beta * sigma_2[i - 1])
