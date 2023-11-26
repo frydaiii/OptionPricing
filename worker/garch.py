@@ -11,8 +11,6 @@ from back.garch.main import GARCH
 from typing import List
 
 
-@app.task(bind=True)
-# def calculate(self, strike_prices: [], expire_dates: [], current_date, r, ticker = ""):
 def calculate(self,
               type: str,
               strike_prices: List[float],
