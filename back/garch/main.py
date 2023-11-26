@@ -19,7 +19,8 @@ class GARCH(LogLikelihooMixin, PricingMixin):
   def InitializeData(self, start_date: datetime, end_date: datetime,
                      ticker: str):
     stock_data, r = get_price_and_r(start_date, end_date, ticker)
-    self.log_returns = stock_data["Close"].pct_change().dropna().to_numpy()
+    self.log_returns = np.log1p(
+        stock_data["Close"].pct_change().dropna().to_numpy())
     self.r = r
     self.ticker = ticker
 
@@ -47,7 +48,7 @@ class GARCH(LogLikelihooMixin, PricingMixin):
                                           (1e-10, None), (1e-10, None)))
 
     if Constraint(opt.x) <= 0:
-      # I use this to check params value, because add constraints to minimize 
+      # I use this to check params value, because add constraints to minimize
       # function cause some problem
       raise ValueError("Parameters does not valid")
 
