@@ -18,6 +18,7 @@ def calculate(self,
   end_date = current_date
   start_date = end_date - timedelta(days=365 * 10)
   stock_data, r = get_price_and_r(start_date, end_date, ticker)
+  r = r[-1]
   spot = stock_data["Close"].iloc[-1]
   log_return = np.log1p(stock_data["Close"].pct_change().dropna().to_numpy())
   vol = np.std(log_return) * np.sqrt(252)

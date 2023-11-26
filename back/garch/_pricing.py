@@ -2,7 +2,7 @@ import tensorflow as tf
 from datetime import datetime
 import numpy as np
 from typing import List
-from back.utils import get_spot_ticker, get_r
+from back.utils import get_spot_ticker, get_r, dte_count
 from statistics import variance
 
 
@@ -15,7 +15,7 @@ class PricingMixin(object):
     beta = self.params[2]
     lambd = self.params[3]
     daily_r = r / 365
-    dte = (expire_date - current_date).days
+    dte = dte_count(current_date, expire_date)
     T = dte / 365
     steps = dte
     num_simulations = 1000

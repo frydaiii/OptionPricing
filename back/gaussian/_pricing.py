@@ -2,7 +2,7 @@ import tensorflow as tf
 from datetime import datetime
 import numpy as np
 from typing import List
-from back.utils import get_spot_ticker, get_r
+from back.utils import get_spot_ticker, get_r, dte_count
 
 
 class PricingMixin(object):
@@ -10,7 +10,7 @@ class PricingMixin(object):
   def OptionPricing(self, type: str, spot: float, strike_price: float,
                     expire_date: datetime, current_date: datetime, r: float):
     assert current_date == self.end_date
-    dte = (expire_date - current_date).days
+    dte = dte_count(current_date, expire_date)
     sims = 10000
     X_star = tf.range(self.N, self.N + dte, dtype=tf.float64)
     X_star = tf.expand_dims(X_star, axis=1)
