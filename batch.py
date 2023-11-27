@@ -12,24 +12,30 @@ import tensorflow as tf
 
 options = pd.read_csv('options_2019.csv')
 
-dict_r = {}
 
 # Black-Scholes ----------------------------------------------------------------
+dict_r = {}
+dict_stock_data = {}
 bs_result = []
 for _, row in options.iterrows():
   # if row["quotedate"] != '2019-10-02' or row[
-  #     "expiration"] != '2019-10-14' or row["strike"] != 2850.0 or row["type"]!='call':
+  #     "expiration"] != '2020-03-20' or row["strike"] != 3500.0 or row["type"]!='put':
   #   continue
+  # if row["quotedate"] == '2019-10-02' and row[
+  #     "expiration"] == '2020-03-20' and row["strike"] == 3500.0 and row["type"]=='put':
+  #   a = 1
   expire_date = datetime.strptime(row["expiration"], "%Y-%m-%d")
   current_date = datetime.strptime(row["quotedate"], "%Y-%m-%d")
   end_date = current_date
   start_date = end_date - timedelta(days=365 * 10)
   if row["quotedate"] in dict_r:
     r = dict_r[row["quotedate"]]
+    stock_data = dict_stock_data[row["quotedate"]]
   else:
     stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
     r = r[-1]
     dict_r[row["quotedate"]] = r
+    dict_stock_data[row["quotedate"]] = stock_data
   spot = stock_data["Close"].iloc[-1]
   log_return = np.log1p(stock_data["Close"].pct_change().dropna().to_numpy())
   vol = np.std(log_return) * np.sqrt(252)
@@ -43,6 +49,7 @@ options["bs"] = bs_result
 # GARCH-------------------------------------------------------------------------
 dict_garch_model = {}
 dict_r = {}
+dict_stock_data = {}
 garch_result = []
 for _, row in options.iterrows():
   #debug
@@ -56,10 +63,12 @@ for _, row in options.iterrows():
   start_date = end_date - timedelta(days=365 * 10)
   if row["quotedate"] in dict_r:
     r = dict_r[row["quotedate"]]
+    stock_data = dict_stock_data[row["quotedate"]]
   else:
     stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
     r = r[-1]
     dict_r[row["quotedate"]] = r
+    dict_stock_data[row["quotedate"]] = stock_data
 
   if row["quotedate"] in dict_garch_model:
     model = dict_garch_model[row["quotedate"]]
@@ -81,6 +90,7 @@ options["garch"] = garch_result
 # GP----------------------------------------------------------------------------
 dict_gp_model = {}
 dict_r = {}
+dict_stock_data = {}
 gp_result = []
 for _, row in options.iterrows():
   # debug
@@ -94,10 +104,12 @@ for _, row in options.iterrows():
   start_date = end_date - timedelta(days=365 * 10)
   if row["quotedate"] in dict_r:
     r = dict_r[row["quotedate"]]
+    stock_data = dict_stock_data[row["quotedate"]]
   else:
     stock_data, r = get_price_and_r(start_date, end_date, "^SPX")
     r = r[-1]
     dict_r[row["quotedate"]] = r
+    dict_stock_data[row["quotedate"]] = stock_data
 
   if row["quotedate"] in dict_gp_model:
     model = dict_gp_model[row["quotedate"]]
