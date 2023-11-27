@@ -17,6 +17,29 @@ def calculate_rmse(a, b):
 
   return rmse
 
+def calculate_mae(a, b):
+    # Ensure both arrays have the same shape
+    assert a.shape == b.shape, "Arrays must have the same shape"
+
+    # Calculate the absolute differences
+    absolute_diff = np.abs(a - b)
+
+    # Calculate the mean absolute difference
+    mean_absolute_diff = np.mean(absolute_diff)
+
+    return mean_absolute_diff
+
+def calculate_mdape(a, b):
+    # Ensure both arrays have the same shape
+    assert a.shape == b.shape, "Arrays must have the same shape"
+
+    # Calculate absolute percentage errors
+    absolute_percentage_error = np.abs((a - b) / b) * 100
+
+    # Calculate the median absolute percentage error
+    mdape = np.median(absolute_percentage_error)
+
+    return mdape
 
 def price(options):
   return (options["bid"] + options["ask"]) / 2
@@ -61,15 +84,47 @@ deep_itm_call = options[
 
 # print_info(deep_itm_call)
 
-bs_result = options["bs"].to_numpy()
-garch_result = options["garch"].to_numpy()
-gp_result = options["gp"].to_numpy()
-market_result = (options["bid"].to_numpy() + options["ask"].to_numpy()) / 2
+def print_result(options):
+  bs_result = options["bs"].to_numpy()
+  garch_result = options["garch"].to_numpy()
+  gp_result = options["gp"].to_numpy()
+  market_result = (options["bid"].to_numpy() + options["ask"].to_numpy()) / 2
 
-bs_rmse = calculate_rmse(bs_result, market_result)
-garch_rmse = calculate_rmse(garch_result, market_result)
-gp_rmse = calculate_rmse(gp_result, market_result)
+  bs_rmse = calculate_rmse(bs_result, market_result)
+  garch_rmse = calculate_rmse(garch_result, market_result)
+  gp_rmse = calculate_rmse(gp_result, market_result)
 
-print("Black-Scholes: ", bs_rmse)
-print("GARCH: ", garch_rmse)
-print("Gaussian Process: ", gp_rmse)
+  bs_mae = calculate_mae(bs_result, market_result)
+  garch_mae = calculate_mae(garch_result, market_result)
+  gp_mae = calculate_mae(gp_result, market_result)
+
+  bs_mdape = calculate_mdape(bs_result, market_result)
+  garch_mdape = calculate_mdape(garch_result, market_result)
+  gp_mdape = calculate_mdape(gp_result, market_result)
+
+  print("RMSE Black-Scholes: {:.2f}".format(bs_rmse))
+  print("RMSE GARCH: {:.2f}".format(garch_rmse))
+  print("RMSE Gaussian Process: {:.2f}".format(gp_rmse))
+
+  print("MAE Black-Scholes: {:.2f}".format(bs_mae))
+  print("MAE GARCH: {:.2f}".format(garch_mae))
+  print("MAE Gaussian Process: {:.2f}".format(gp_mae))
+
+  print("MdAPE Black-Scholes: {:.2f}".format(bs_mdape))
+  print("MdAPE GARCH: {:.2f}".format(garch_mdape))
+  print("MdAPE Gaussian Process: {:.2f}".format(gp_mdape))
+
+  print("Min Black-Scholes: {:.2f}".format(np.min(bs_result-market_result)))
+  print("Min GARCH: {:.2f}".format(np.min(garch_result-market_result)))
+  print("Min Gaussian Process: {:.2f}".format(np.min(gp_result-market_result)))
+
+  print("Max Black-Scholes: {:.2f}".format(np.max(bs_result-market_result)))
+  print("Max GARCH: {:.2f}".format(np.max(garch_result-market_result)))
+  print("Max Gaussian Process: {:.2f}".format(np.max(gp_result-market_result)))
+
+
+  print(options[options["bs"]-(options["bid"].to_numpy() + options["ask"].to_numpy()) / 2==np.min(bs_result-market_result)])
+
+# print_result(options)
+
+print(options.loc[32174])
