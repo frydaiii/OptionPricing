@@ -59,17 +59,17 @@ deep_itm_call = options[
     & ((options["expiration"] - options["quotedate"]).dt.days > 160)
     ]
 
-print_info(deep_itm_call)
+# print_info(deep_itm_call)
 
-# bs_result = options["bs"].to_numpy()
-# garch_result = options["garch"].to_numpy()
-# gp_result = options["gp"].to_numpy()
-# market_result = (options["bid"].to_numpy() + options["ask"].to_numpy()) / 2
+bs_result = options["bs"].to_numpy()
+garch_result = options["garch"].to_numpy()
+gp_result = options["gp"].to_numpy()
+market_result = (options["bid"].to_numpy() + options["ask"].to_numpy()) / 2
 
-# bs_rmse = calculate_rmse(bs_result, market_result)
-# garch_rmse = calculate_rmse(garch_result, market_result)
-# gp_rmse = calculate_rmse(gp_result, market_result)
+bs_rmse = calculate_rmse(bs_result, market_result)
+garch_rmse = calculate_rmse(garch_result, market_result)
+gp_rmse = calculate_rmse(gp_result, market_result)
 
-# print("Black-Scholes: ", bs_rmse)
-# print("GARCH: ", garch_rmse)
-# print("Gaussian Process: ", gp_rmse)
+print("Black-Scholes: ", bs_rmse)
+print("GARCH: ", garch_rmse)
+print("Gaussian Process: ", gp_rmse)
