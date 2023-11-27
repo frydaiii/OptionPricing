@@ -17,7 +17,7 @@ def calculate(self,
   assert not (len(strike_prices) > 1 and len(expire_dates) > 1)
 
   # prepare data
-  start_date = current_date - timedelta(days=5 * 365)
+  start_date = current_date - timedelta(days=10 * 365)
   end_date = current_date
 
   model = GaussianProcess(self)

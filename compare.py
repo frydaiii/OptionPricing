@@ -123,8 +123,8 @@ def print_result(options):
   print("Max Gaussian Process: {:.2f}".format(np.max(gp_result-market_result)))
 
 
-  print(options[options["bs"]-(options["bid"].to_numpy() + options["ask"].to_numpy()) / 2==np.min(bs_result-market_result)])
+  # print(options[options["bs"]-(options["bid"].to_numpy() + options["ask"].to_numpy()) / 2==np.min(bs_result-market_result)])
 
-# print_result(options)
+print_result(options)
 
-print(options.loc[32174])
+# print(options.loc[32266])

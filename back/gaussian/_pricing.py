@@ -29,7 +29,7 @@ class PricingMixin(object):
     #                           stddev=1.0,
     #                           dtype=tf.float64)
     log_return = daily_r - tf.cast(0.5, tf.float64) * Y
-    ln_S = tf.math.log(spot) + tf.math.cumsum(log_return, axis=0)
+    ln_S = tf.math.log(spot) + tf.math.reduce_sum(log_return, axis=0)
 
     S = tf.math.exp(ln_S)
     if type == "call":
