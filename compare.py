@@ -55,7 +55,7 @@ def print_info(options):
   print("observations: ", len(options))
 
 
-options = pd.read_csv('result_options_2019.csv')
+options = pd.read_csv('result_options_2019_10.csv')
 options_2 = pd.read_csv('options_2019_2.csv')
 options["underlying_last"] = options_2["underlying_last"]
 options["expiration"] = pd.to_datetime(options["expiration"])
@@ -104,27 +104,40 @@ def print_result(options):
 
   print("RMSE Black-Scholes: {:.2f}".format(bs_rmse))
   print("RMSE GARCH: {:.2f}".format(garch_rmse))
-  print("RMSE Gaussian Process: {:.2f}".format(gp_rmse))
+  print("RMSE Gaussian Process: {:.2f}\n--------------------------".format(gp_rmse))
 
   print("MAE Black-Scholes: {:.2f}".format(bs_mae))
   print("MAE GARCH: {:.2f}".format(garch_mae))
-  print("MAE Gaussian Process: {:.2f}".format(gp_mae))
+  print("MAE Gaussian Process: {:.2f}\n--------------------------".format(gp_mae))
 
   print("MdAPE Black-Scholes: {:.2f}".format(bs_mdape))
   print("MdAPE GARCH: {:.2f}".format(garch_mdape))
   print("MdAPE Gaussian Process: {:.2f}".format(gp_mdape))
 
-  print("Min Black-Scholes: {:.2f}".format(np.min(bs_result-market_result)))
-  print("Min GARCH: {:.2f}".format(np.min(garch_result-market_result)))
-  print("Min Gaussian Process: {:.2f}".format(np.min(gp_result-market_result)))
+  # print("Min Black-Scholes: {:.2f}".format(np.min(bs_result-market_result)))
+  # print("Min GARCH: {:.2f}".format(np.min(garch_result-market_result)))
+  # print("Min Gaussian Process: {:.2f}".format(np.min(gp_result-market_result)))
 
-  print("Max Black-Scholes: {:.2f}".format(np.max(bs_result-market_result)))
-  print("Max GARCH: {:.2f}".format(np.max(garch_result-market_result)))
-  print("Max Gaussian Process: {:.2f}".format(np.max(gp_result-market_result)))
+  # print("Max Black-Scholes: {:.2f}".format(np.max(bs_result-market_result)))
+  # print("Max GARCH: {:.2f}".format(np.max(garch_result-market_result)))
+  # print("Max Gaussian Process: {:.2f}".format(np.max(gp_result-market_result)))
 
 
   # print(options[options["bs"]-(options["bid"].to_numpy() + options["ask"].to_numpy()) / 2==np.min(bs_result-market_result)])
 
-print_result(options)
+deep_itm_call = options[
+    (options["type"] == "put")
+    & (options["strike"] / options["underlying_last"] > 1.15)
+    # & (options["strike"] / options["underlying_last"] < 1.15)
+    # & ((options["expiration"] - options["quotedate"]).dt.days >= 60)
+    & ((options["expiration"] - options["quotedate"]).dt.days > 160)
+    ]
+# print_result(deep_itm_call)
 
 # print(options.loc[32266])
+
+
+for _, row in options.iterrows():
+   if np.abs((row["bs"]-(row["bid"]+row["ask"])/2)/-(row["bid"]+row["ask"])) > 0.5:
+      print(row)
+      break
