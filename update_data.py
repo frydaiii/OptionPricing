@@ -5,7 +5,7 @@ import datetime
 symbol = "^SPX"
 
 # Set the date range
-start_date = "2008-01-01"
+start_date = "1990-01-02"
 end_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 # Create a ticker object for the S&P 500

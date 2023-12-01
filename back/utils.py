@@ -87,10 +87,20 @@ def get_spot(date: datetime) -> float:
 
 
 def get_price_and_r(start_date: datetime, end_date: datetime,
-                    ticker: str) -> (pd.DataFrame, float):
+                    ticker: str) -> (pd.DataFrame, []):
   stock_data = get_data(start_date, end_date, ticker)
-  tb_rate = yf.download("^IRX", start=start_date, end=end_date)
-  r = tb_rate["Close"].to_numpy() / 100
+  stock_data['Date'] = pd.to_datetime(stock_data['Date'])
+  if (start_date > datetime.strptime("1990-01-01", "%Y-%m-%d") and 
+      end_date < datetime.strptime("2020-01-01", "%Y-%m-%d")):
+    tb_rate = pd.read_csv("tbill.csv")
+    tb_rate['time'] = pd.to_datetime(tb_rate['time'])
+    filtered_rate = tb_rate[tb_rate['time'].isin(stock_data['Date'])]
+    filtered_rate['rate'] = filtered_rate["rate"].replace('ND', None).ffill()
+    r = filtered_rate['rate'].to_numpy()[1:]
+    r = np.asarray(r, dtype=float) / 100
+  else:
+    tb_rate = yf.download("^IRX", start=start_date, end=end_date)
+    r = tb_rate["Close"].to_numpy() / 100
   if len(r) < len(stock_data):
     gap = len(stock_data) - len(r)
     for _ in range(1, gap):

@@ -132,12 +132,6 @@ deep_itm_call = options[
     # & ((options["expiration"] - options["quotedate"]).dt.days >= 60)
     & ((options["expiration"] - options["quotedate"]).dt.days > 160)
     ]
-# print_result(deep_itm_call)
+print_result(options)
 
 # print(options.loc[32266])
-
-
-for _, row in options.iterrows():
-   if np.abs((row["bs"]-(row["bid"]+row["ask"])/2)/-(row["bid"]+row["ask"])) > 0.5:
-      print(row)
-      break

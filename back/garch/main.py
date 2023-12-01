@@ -34,7 +34,8 @@ class GARCH(LogLikelihooMixin, PricingMixin):
     "Optimizes the log likelihood function and returns estimated coefficients"
     # Parameters initialization
     print("Optimizing GARCH...............")
-    parameters = [0.1, 0.92, 0.05, 0]
+    parameters = [0.01, 0.05, 0.90, 0.05]
+    parameters = [0, 0, 0, 0]
 
     def Constraint(params):
       alpha = params[1]
@@ -42,11 +43,21 @@ class GARCH(LogLikelihooMixin, PricingMixin):
       lambd = params[3]
       return 1 - alpha * (1 + lambd**2) - beta
 
-    opt = scipy.optimize.minimize(self.LogLikelihood,
+    minimizer_kwargs = {
+      'method': 'L-BFGS-B',
+      'bounds': ((1e-10, 1), (0, 1), (0, 1), (-1, 1))
+    }
+    opt = scipy.optimize.basinhopping(self.LogLikelihood,
                                   parameters,
-                                  bounds=((1e-10, None), (0, None),
-                                          (0, None), (0, 1)),
-                                          method="Nelder-Mead")
+                                  minimizer_kwargs=minimizer_kwargs)
+    # opt = scipy.optimize.minimize(self.LogLikelihood,
+    #                               parameters,
+    #                               bounds=((1e-10, None), (0, None),
+    #                                       (0, None), (None, None)),
+    #                                       # method="L-BFGS-B")
+    #                                       method="Nelder-Mead")
+    #                                       # method="SLSQP")
+
 
     if Constraint(opt.x) <= 0:
       # I use this to check params value, because add constraints to minimize
