@@ -31,7 +31,8 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
     data = data.scalars().all()
     strike_prices = [int(opt.strike) for opt in data]
     spot_prices = [opt.underlying_last for opt in data]
-    market_prices = [opt.last for opt in data]
+    market_prices = [(opt.bid+opt.ask)/2 for opt in data]
+    # market_prices = [opt.last for opt in data]
     expire_dates = [expire_date]
   else:
     query = (query.where(Option2019.strike == strike).order_by(
@@ -41,7 +42,8 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
     expire_dates = [
         datetime.strptime(opt.expiration, "%Y-%m-%d") for opt in data
     ]
-    market_prices = [opt.last for opt in data]
+    market_prices = [(opt.bid+opt.ask)/2 for opt in data]
+    # market_prices = [opt.last for opt in data]
     spot_prices = [opt.underlying_last for opt in data]
     strike_prices = [strike]
 
