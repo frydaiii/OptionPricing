@@ -20,9 +20,11 @@ def handle_calculate_prices_status(gp_id: str, garch_id: str, bs_id: str,
 
     market_prices = market_info["prices"]
     strike_prices = market_info["strikes"]
+    spot_prices = market_info["spots"]
     expire_dates = market_info["expire_dates"]
     img1, img2 = save_img(market_id, garch_prices, bs_prices, gp_prices,
-                          market_prices, strike_prices, expire_dates)
+                          market_prices, strike_prices, spot_prices,
+                          expire_dates)
 
     return {"done": True, "img1": img1, "img2": img2}
   elif (gp_result.failed() or garch_result.failed() or bs_result.failed()):

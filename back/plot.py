@@ -8,40 +8,41 @@ def save_img(id,
              prices_gp,
              market_prices,
              strike_prices=[],
+             spot_prices=[],
              expire_dates=[]):
   # plot and save to image
   plt.clf()
-  plt.ylabel('Prices')
-  plt.title('Comparison of Prices')
+  # plt.ylabel('Prices')
+  # plt.title('Comparison of Prices')
   if len(strike_prices) > 1:
-    plt.xlabel('Strike Prices')
-    plt.plot(strike_prices,
+    plt.xlabel('K/S')
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
              market_prices,
              "-ro",
-             label="Market prices",
+             label="Giá thị trường",
              markersize=2)
-    plt.plot(strike_prices,
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
              prices_garch,
              "-yo",
-             label="GARCH prices",
+             label="GARCH",
              markersize=2)
-    plt.plot(strike_prices,
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
              prices_bs,
              "-mo",
-             label="Black Scholes prices",
+             label="Black Scholes",
              markersize=2)
-    plt.plot(strike_prices,
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
              prices_gp,
              "-ko",
-             label="Gaussian Process prices",
+             label="Quá trình Gauss",
              markersize=2)
   else:
-    plt.xlabel('Expire Date')
+    plt.xlabel('Ngày đáo hạn')
     plt.xticks(rotation=90)
-    plt.plot(expire_dates, market_prices, "-ro", label="Market prices")
-    plt.plot(expire_dates, prices_garch, "-yo", label="GARCH prices")
-    plt.plot(expire_dates, prices_bs, "-mo", label="Black Scholes prices")
-    plt.plot(expire_dates, prices_gp, "-ko", label="Gaussian Process prices")
+    plt.plot(expire_dates, market_prices, "-ro", label="Giá thị trường")
+    plt.plot(expire_dates, prices_garch, "-yo", label="GARCH")
+    plt.plot(expire_dates, prices_bs, "-mo", label="Black Scholes")
+    plt.plot(expire_dates, prices_gp, "-ko", label="Quá trình Gauss")
 
   plt.legend()
 
@@ -50,37 +51,37 @@ def save_img(id,
   plt.savefig(img1_path)
 
   plt.clf()
-  plt.ylabel('Points')
-  plt.title('Comparison of MdAPE points')
+  # plt.ylabel('Points')
+  # plt.title('Comparison of MAPE points')
   prices_garch = np.array(prices_garch)
   prices_bs = np.array(prices_bs)
   market_prices = np.array([float(p) for p in market_prices])
-  garch_mdape = np.abs((prices_garch - market_prices) / market_prices)
-  bs_mdape = np.abs((prices_bs - market_prices) / market_prices)
-  gp_mdape = np.abs((prices_gp - market_prices) / market_prices)
+  garch_mape = np.abs((prices_garch - market_prices) / market_prices)
+  bs_mape = np.abs((prices_bs - market_prices) / market_prices)
+  gp_mape = np.abs((prices_gp - market_prices) / market_prices)
   if len(strike_prices) > 1:
-    plt.xlabel('Strike Prices')
-    plt.plot(strike_prices,
-             garch_mdape,
+    plt.xlabel('K/S')
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
+             garch_mape,
              "-yo",
-             label="GARCH MdAPE",
+             label="GARCH",
              markersize=2)
-    plt.plot(strike_prices,
-             bs_mdape,
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
+             bs_mape,
              "-mo",
-             label="Black Scholes MdAPE",
+             label="Black Scholes",
              markersize=2)
-    plt.plot(strike_prices,
-             gp_mdape,
+    plt.plot(np.array(strike_prices)/np.array(spot_prices),
+             gp_mape,
              "-ko",
-             label="Gaussian Process MdAPE",
+             label="Quá trình Gauss",
              markersize=2)
   else:
-    plt.xlabel('Expire Date')
+    plt.xlabel('Ngày đáo hạn')
     plt.xticks(rotation=90)
-    plt.plot(expire_dates, garch_mdape, "-yo", label="GARCH MdAPE")
-    plt.plot(expire_dates, bs_mdape, "-mo", label="Black Scholes MdAPE")
-    plt.plot(expire_dates, gp_mdape, "-ko", label="Gaussian Process MdAPE")
+    plt.plot(expire_dates, garch_mape, "-yo", label="GARCH")
+    plt.plot(expire_dates, bs_mape, "-mo", label="Black Scholes")
+    plt.plot(expire_dates, gp_mape, "-ko", label="Quá trình Gauss")
 
   plt.legend()
   # Show the plot

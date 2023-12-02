@@ -17,6 +17,7 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
                             ticker: str):
   expire_dates = []
   strike_prices = []
+  spot_prices = []
   market_prices = []
   query = (select(Option2019).where(Option2019.underlying == ticker).where(
       Option2019.quotedate == current_date.strftime("%Y-%m-%d")).where(
@@ -29,6 +30,7 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
     data = db.execute(query)
     data = data.scalars().all()
     strike_prices = [int(opt.strike) for opt in data]
+    spot_prices = [opt.underlying_last for opt in data]
     market_prices = [opt.last for opt in data]
     expire_dates = [expire_date]
   else:
@@ -40,6 +42,7 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
         datetime.strptime(opt.expiration, "%Y-%m-%d") for opt in data
     ]
     market_prices = [opt.last for opt in data]
+    spot_prices = [opt.underlying_last for opt in data]
     strike_prices = [strike]
 
   if ticker == "SPX" or ticker == "SPXW" or ticker == "":
@@ -55,6 +58,7 @@ def handle_calculate_prices(db: Session, type: str, strike: float,
   market_info = {
       "prices": market_prices,
       "strikes": strike_prices,
+      "spots": spot_prices,
       "expire_dates": [date.strftime('%d/%m/%Y') for date in expire_dates]
   }
   rd.set(market_id, json.dumps(market_info))
