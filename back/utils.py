@@ -100,8 +100,8 @@ def get_price_and_r(start_date: datetime, end_date: datetime,
     r = np.asarray(r, dtype=float) / 100
   else:
     tb_rate = yf.download("^IRX", start=start_date, end=end_date)
-    r = tb_rate["Close"].to_numpy() / 100
-  if len(r) < len(stock_data):
+    r = tb_rate["Close"].to_numpy()[1:] / 100
+  if len(r) < len(stock_data) - 1:
     gap = len(stock_data) - len(r)
     for _ in range(1, gap):
       r = np.append(r, r[-1])

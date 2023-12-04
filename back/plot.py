@@ -13,7 +13,7 @@ def save_img(id,
   # plot and save to image
   plt.clf()
   # plt.ylabel('Prices')
-  # plt.title('Comparison of Prices')
+  # plt.title('So sánh giá')
   if len(strike_prices) > 1:
     plt.xlabel('K/S')
     plt.plot(np.array(strike_prices)/np.array(spot_prices),
@@ -52,7 +52,7 @@ def save_img(id,
 
   plt.clf()
   # plt.ylabel('Points')
-  # plt.title('Comparison of MAPE points')
+  # plt.title('So sánh sai số')
   prices_garch = np.array(prices_garch)
   prices_bs = np.array(prices_bs)
   market_prices = np.array([float(p) for p in market_prices])
