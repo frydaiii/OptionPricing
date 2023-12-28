@@ -19,7 +19,8 @@ def handle_calculate_price(type: str,
   else:
     if ticker == "SPX" or ticker == "SPXW" or ticker == "":
       ticker = "^SPX"
-    r = get_r(current_date)
+    # r = get_r(current_date)
+    r = 0.05
     v = get_volatility_ticker(ticker, current_date)
     spot = get_spot_ticker(ticker, current_date)
     bs_task = bs.CalculateSingle.delay(type, spot, strike, current_date,

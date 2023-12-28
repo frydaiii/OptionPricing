@@ -1,5 +1,5 @@
-import {CalculatePrice, CalculatePrice2} from "./calculate.js"
-import {GetCurrentDate} from "./utils.js"
+import { CalculatePrice, CalculatePrice2 } from "./calculate.js"
+import { GetCurrentDate, GetExpirations, PopulateDropdown } from "./utils.js"
 
 $(document).ready(function () {
   var tickerSymbol;
@@ -13,7 +13,7 @@ $(document).ready(function () {
     dataType: 'json',
     success: function (data) {
       // populateDropdown(data, "optionSelect1");
-      populateDropdown(data, "optionSelect2");
+      PopulateDropdown(data, "optionSelect2");
     },
     error: function (error) {
       console.error('Error fetching data from the API: ' + error.statusText);
@@ -21,20 +21,20 @@ $(document).ready(function () {
   });
 
   // Function to populate the first dropdown
-  function populateDropdown(options, option_select_id) {
-    var dropdown = document.getElementById(option_select_id);
+  // function populateDropdown(options, option_select_id) {
+  //   var dropdown = document.getElementById(option_select_id);
 
-    // // Clear any existing options
-    // dropdown.innerHTML = "";
+  //   // // Clear any existing options
+  //   // dropdown.innerHTML = "";
 
-    // Iterate through the array and add options to the dropdown
-    options.forEach(function (option) {
-      var optionElement = document.createElement("option");
-      optionElement.value = option; // Assuming the API returns string values
-      optionElement.text = option;  // Display the same value as the option text
-      dropdown.appendChild(optionElement);
-    });
-  }
+  //   // Iterate through the array and add options to the dropdown
+  //   options.forEach(function (option) {
+  //     var optionElement = document.createElement("option");
+  //     optionElement.value = option; // Assuming the API returns string values
+  //     optionElement.text = option;  // Display the same value as the option text
+  //     dropdown.appendChild(optionElement);
+  //   });
+  // }
 
   // Initialize the datepicker
   // _todo add constraint to datepicker
@@ -57,15 +57,39 @@ $(document).ready(function () {
     dateFormat: 'yy-mm-dd',
     onSelect: function (date) {
 
-      var selectedDate = new Date(date);
-      var msecsInADay = 86400000;
-      var endDate = new Date(selectedDate.getTime() + msecsInADay);
+      // var selectedDate = new Date(date);
+      // var msecsInADay = 86400000;
+      // var endDate = new Date(selectedDate.getTime() + msecsInADay);
+      var type = $("input[name='type']:checked").val()
+      var e = document.getElementById("optionSelect2");
+      tickerSymbol = e.options[e.selectedIndex].text;
+      var expirations = GetExpirations(tickerSymbol, type, date)
+      console.log(expirations);
 
       //Set Minimum Date of EndDatePicker After Selected Date of StartDatePicker
+      console.log(date)
       $("#expirationDate2").datepicker({
-        minDate: endDate,
+        // minDate: endDate,
+        startDate: new Date(date),
         changeYear: true,
-        dateFormat: 'yy-mm-dd'
+        dateFormat: 'yy-mm-dd',
+        beforeShowDay: function (d) {
+          var dmy = (d.getMonth()+1); 
+          if(d.getMonth()<9) 
+              dmy="0"+dmy; 
+          dmy+= "-"; 
+  
+          if(d.getDate()<10) dmy+="0"; 
+              dmy=d.getFullYear()+ "-" + dmy + d.getDate(); 
+  
+          // console.log(dmy+' : '+($.inArray(dmy, expirations)));
+  
+          if ($.inArray(dmy, expirations) != -1) {
+              return [true, "","Available"]; 
+          } else{
+               return [false,"","unAvailable"]; 
+          }
+        }
       });
     }
   });
@@ -76,8 +100,8 @@ $(document).ready(function () {
     $('#result-prices').empty();
 
     // Get selected ticker symbol and date from the form
-    var type=$("input[name='type']:checked").val()
-    tickerSymbol = $("#symbolTicker").val();
+    var type = $("input[name='type']:checked").val()
+    tickerSymbol = $("#symbolTicker").val(); ``
     selectedDate = $("#tradingDate").val();
     expireDate = $("#expirationDate").val();
     var spot = Number($("#spotPrice").val());
@@ -92,7 +116,7 @@ $(document).ready(function () {
     $('#image-container-2').empty();
 
     // Get selected ticker symbol and date from the form
-    var type=$("input[name='type']:checked").val()
+    var type = $("input[name='type']:checked").val()
     tickerSymbol = $("#optionSelect2").val();
     selectedDate = $("#tradingDate2").val();
     expireDate = $("#expirationDate2").val();

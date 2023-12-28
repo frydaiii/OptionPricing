@@ -33,4 +33,44 @@ function GetCurrentDate() {
 
   return `${year}-${month}-${day}`;
 }
-export {Sleep, CreateNestedList, GetCurrentDate}
+
+function GetExpirations(ticker, type, trading_date) {
+  var req = {
+    "ticker": ticker,
+    "type": type,
+    "trading_date": trading_date
+  }
+  var expire_dates;
+  $.ajax({
+    url: '/expirations',
+    method: 'POST',
+    async: false,
+    dataType: 'json',
+    contentType: 'application/json',
+    data: JSON.stringify(req),
+    success: function (response) {
+      expire_dates = response;
+    },
+    error: function (error) {
+      console.error('Error calculating price:', error.statusText);
+    }
+  });
+
+  return expire_dates;
+}
+
+function PopulateDropdown(options, option_select_id) {
+  var dropdown = document.getElementById(option_select_id);
+
+  // // Clear any existing options
+  // dropdown.innerHTML = "";
+
+  // Iterate through the array and add options to the dropdown
+  options.forEach(function (option) {
+    var optionElement = document.createElement("option");
+    optionElement.value = option; // Assuming the API returns string values
+    optionElement.text = option;  // Display the same value as the option text
+    dropdown.appendChild(optionElement);
+  });
+}
+export { Sleep, CreateNestedList, GetCurrentDate, GetExpirations, PopulateDropdown }

@@ -10,6 +10,7 @@ from handle.calculate_prices import handle_calculate_prices
 from handle.calculate_price import handle_calculate_price
 from handle.calculate_prices_status import handle_calculate_prices_status
 from handle.calculate_price_status import handle_calculate_price_status
+from handle.get_expirations import handle_get_expirations
 import uvicorn
 
 # Define database URL
@@ -138,6 +139,22 @@ async def get_calculate_prices_status(req: CalPriceRequest2Status):
   market_id = req.market_id
 
   return handle_calculate_prices_status(gp_id, garch_id, bs_id, market_id)
+
+
+class ExpirationDates(BaseModel):
+  ticker: str
+  type: str
+  trading_date: str
+
+
+@app.post("/expirations")
+async def expiration_dates(req: ExpirationDates,
+                           db: Session = Depends(get_db)):
+  ticker = req.ticker
+  type = req.type
+  trading_date = req.trading_date
+
+  return handle_get_expirations(db, ticker, type, trading_date)
 
 
 @app.on_event("startup")

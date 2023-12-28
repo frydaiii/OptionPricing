@@ -36,7 +36,7 @@ def get_r(end_date: datetime) -> float:
   if type(end_date) is str:
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
   tb_rate = yf.download("^IRX",
-                        start=end_date - timedelta(days=3),
+                        start=end_date - timedelta(days=5),
                         end=end_date)
   r = tb_rate.iloc[-1]["Close"] or tb_rate.iloc[0]
   return r / 100
@@ -102,9 +102,14 @@ def get_price_and_r(start_date: datetime, end_date: datetime,
     tb_rate = yf.download("^IRX", start=start_date, end=end_date)
     r = tb_rate["Close"].to_numpy()[1:] / 100
   if len(r) < len(stock_data) - 1:
+    print("r < stock", len(r), len(stock_data))
     gap = len(stock_data) - len(r)
     for _ in range(1, gap):
       r = np.append(r, r[-1])
+  if len(r) > len(stock_data) - 1:
+    print("r > stock", len(r), len(stock_data))
+    r = r[0:len(stock_data)-1]
+      
 
   # if len(r) != len(stock_data):
   #   print("r-----", len(r))
